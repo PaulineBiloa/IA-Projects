@@ -1,0 +1,1343 @@
+# ====================================================================
+# FICHIER : dashboard.py
+# Dashboard Streamlit Premium - Classification des Iris
+# Design sombre élégant avec menu horizontal
+# ====================================================================
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import requests
+import pickle
+from datetime import datetime
+
+# Configuration de la page
+st.set_page_config(
+    page_title="Iris Classification Platform",
+    page_icon="🔬",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ====================================================================
+# STYLE CSS PERSONNALISÉ - THEME SOMBRE ROSE ÉLÉGANT
+# ====================================================================
+
+st.markdown("""
+    <style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Variables CSS */
+    :root {
+        --bg-primary: #0f0f0f;
+        --bg-secondary: #1a1a1a;
+        --bg-tertiary: #242424;
+        --accent-rose: #ff6b9d;
+        --accent-rose-dark: #d4537a;
+        --accent-rose-light: #ff8fb3;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+        --text-muted: #6b6b6b;
+        --border-color: #333333;
+        --shadow: 0 8px 32px rgba(255, 107, 157, 0.1);
+        --shadow-hover: 0 12px 48px rgba(255, 107, 157, 0.2);
+    }
+    
+    /* Reset et base */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .stApp {
+        background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+    }
+    
+    /* Header personnalisé */
+    .main-header {
+        background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(212, 83, 122, 0.05) 100%);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 107, 157, 0.1);
+        border-radius: 24px;
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+        box-shadow: var(--shadow);
+    }
+    
+    .main-title {
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ff6b9d 0%, #ff8fb3 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    
+    .main-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+        font-weight: 400;
+    }
+    
+    /* Navigation horizontale */
+    .horizontal-nav {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        box-shadow: var(--shadow);
+    }
+    
+    .nav-button {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    
+    .nav-button:hover {
+        background: rgba(255, 107, 157, 0.1);
+        border-color: var(--accent-rose);
+        color: var(--accent-rose);
+        transform: translateY(-2px);
+    }
+    
+    .nav-button.active {
+        background: linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-rose-dark) 100%);
+        border-color: var(--accent-rose);
+        color: white;
+        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+    }
+    
+    /* Cards */
+    .glass-card {
+        background: rgba(26, 26, 26, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .glass-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: rgba(255, 107, 157, 0.3);
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .metric-card:hover {
+        border-color: var(--accent-rose);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(255, 107, 157, 0.2);
+    }
+    
+    .metric-label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-value {
+        color: var(--accent-rose);
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+    
+    .metric-description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Boutons */
+    .stButton > button {
+        background: linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-rose-dark) 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        width: 100%;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(255, 107, 157, 0.4);
+        background: linear-gradient(135deg, var(--accent-rose-light) 0%, var(--accent-rose) 100%);
+    }
+    
+    /* Inputs */
+    .stNumberInput > div > div > input,
+    .stTextInput > div > div > input {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-primary);
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stNumberInput > div > div > input:focus,
+    .stTextInput > div > div > input:focus {
+        border-color: var(--accent-rose);
+        box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+    }
+    
+    /* Labels */
+    label {
+        color: var(--text-secondary) !important;
+        font-weight: 500 !important;
+        font-size: 0.95rem !important;
+    }
+    
+    /* Dataframes */
+    .stDataFrame {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    /* Info boxes */
+    .stAlert {
+        background: rgba(255, 107, 157, 0.1);
+        border: 1px solid rgba(255, 107, 157, 0.3);
+        border-radius: 12px;
+        color: var(--text-primary);
+    }
+    
+    /* Divider */
+    hr {
+        border-color: var(--border-color);
+        margin: 2rem 0;
+    }
+    
+    /* Statistics Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .stat-box {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-box:hover {
+        border-color: var(--accent-rose);
+        transform: translateY(-2px);
+    }
+    
+    .stat-title {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    /* Section Headers */
+    .section-header {
+        color: var(--text-primary);
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .section-subheader {
+        color: var(--text-secondary);
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin: 1.5rem 0 1rem 0;
+    }
+    
+    /* Footer */
+    .footer {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 2rem;
+        margin-top: 4rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    /* Status badge */
+    .status-badge {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-rose-dark) 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3);
+    }
+    
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    </style>
+    """, unsafe_allow_html=True)
+
+# ====================================================================
+# FONCTIONS UTILITAIRES
+# ====================================================================
+
+@st.cache_data
+def get_model_info(api_url):
+    """Récupérer les informations du modèle depuis l'API"""
+    try:
+        response = requests.get(f"{api_url}/info", timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        return None
+    except:
+        return None
+
+@st.cache_data
+def load_iris_data():
+    """Charger le dataset Iris complet"""
+    from sklearn.datasets import load_iris
+    iris = load_iris()
+    df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+    df['species'] = iris.target
+    species_names = {0: 'setosa', 1: 'versicolor', 2: 'virginica'}
+    df['species'] = df['species'].map(species_names)
+    df.columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species']
+    return df
+
+def create_metric_card(label, value, description=""):
+    """Créer une carte de métrique élégante"""
+    return f"""
+    <div class="metric-card">
+        <div class="metric-label">{label}</div>
+        <div class="metric-value">{value}</div>
+        {f'<div class="metric-description">{description}</div>' if description else ''}
+    </div>
+    """
+
+def create_stat_box(title, value):
+    """Créer une boîte de statistique"""
+    return f"""
+    <div class="stat-box">
+        <div class="stat-title">{title}</div>
+        <div class="stat-value">{value}</div>
+    </div>
+    """
+
+# ====================================================================
+# HEADER PRINCIPAL
+# ====================================================================
+
+st.markdown("""
+    <div class="main-header">
+        <h1 class="main-title">Iris Classification Platform</h1>
+        <p class="main-subtitle">Système de classification avancé des espèces d'iris utilisant le Machine Learning</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ====================================================================
+# NAVIGATION HORIZONTALE
+# ====================================================================
+
+# Initialiser la session state pour la navigation
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = "Dashboard"
+
+# Créer les boutons de navigation
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    if st.button("Dashboard", use_container_width=True, key="nav_dashboard"):
+        st.session_state.current_page = "Dashboard"
+
+with col2:
+    if st.button("Prédiction Simple", use_container_width=True, key="nav_predict"):
+        st.session_state.current_page = "Prédiction Simple"
+
+with col3:
+    if st.button("Prédictions Multiples", use_container_width=True, key="nav_batch"):
+        st.session_state.current_page = "Prédictions Multiples"
+
+with col4:
+    if st.button("Visualisations", use_container_width=True, key="nav_viz"):
+        st.session_state.current_page = "Visualisations"
+
+with col5:
+    if st.button("À propos", use_container_width=True, key="nav_about"):
+        st.session_state.current_page = "À propos"
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Configuration API dans la sidebar (cachée par défaut)
+with st.sidebar:
+    st.markdown("### Configuration API")
+    api_url = st.text_input(
+        "URL de l'API Flask",
+        value="http://127.0.0.1:5000",
+        help="URL de votre serveur Flask"
+    )
+    
+    if st.button("Tester la connexion", use_container_width=True):
+        try:
+            response = requests.get(f"{api_url}/health", timeout=5)
+            if response.status_code == 200:
+                st.success("Connexion établie")
+            else:
+                st.error("Erreur de connexion")
+        except Exception as e:
+            st.error(f"Impossible de se connecter: {str(e)}")
+
+# ====================================================================
+# PAGE 1: DASHBOARD PRINCIPAL
+# ====================================================================
+
+if st.session_state.current_page == "Dashboard":
+    
+    # Charger les données
+    df = load_iris_data()
+    model_info = get_model_info(api_url)
+    
+    # Section 1: Métriques du modèle
+    st.markdown('<div class="section-header">Vue d\'ensemble du modèle</div>', unsafe_allow_html=True)
+    
+    if model_info:
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(create_metric_card(
+                "Modèle",
+                model_info['model_name'],
+                "Algorithme utilisé"
+            ), unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(create_metric_card(
+                "Exactitude",
+                model_info['accuracy'],
+                "Performance sur test"
+            ), unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(create_metric_card(
+                "Features",
+                len(model_info['features']),
+                "Variables prédictives"
+            ), unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(create_metric_card(
+                "Classes",
+                len(model_info['species']),
+                "Espèces identifiables"
+            ), unsafe_allow_html=True)
+    
+    else:
+        st.warning("API non disponible. Lancez le serveur Flask pour voir les métriques du modèle.")
+    
+    # Section 2: Statistiques du dataset
+    st.markdown('<div class="section-header">Analyse statistique du dataset</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Statistiques descriptives")
+        
+        stats = df.describe().T[['mean', 'std', 'min', 'max']].round(2)
+        stats.columns = ['Moyenne', 'Écart-type', 'Minimum', 'Maximum']
+        
+        # Créer un tableau stylisé
+        fig = go.Figure(data=[go.Table(
+            header=dict(
+                values=['Variable'] + list(stats.columns),
+                fill_color='#1a1a1a',
+                align='left',
+                font=dict(color='white', size=12, family='Inter')
+            ),
+            cells=dict(
+                values=[stats.index] + [stats[col] for col in stats.columns],
+                fill_color='#242424',
+                align='left',
+                font=dict(color='#b3b3b3', size=11, family='Inter')
+            ))
+        ])
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=250,
+            margin=dict(l=0, r=0, t=0, b=0)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Répartition des espèces")
+        
+        species_counts = df['species'].value_counts()
+        
+        fig = go.Figure(data=[go.Pie(
+            labels=species_counts.index,
+            values=species_counts.values,
+            hole=0.6,
+            marker=dict(colors=['#ff6b9d', '#ff8fb3', '#d4537a']),
+            textfont=dict(color='white', size=14, family='Inter')
+        )])
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            showlegend=True,
+            legend=dict(
+                font=dict(color='white', family='Inter'),
+                bgcolor='rgba(26,26,26,0.5)'
+            ),
+            height=250,
+            margin=dict(l=20, r=20, t=20, b=20)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Section 3: Corrélations
+    st.markdown('<div class="section-header">Matrice de corrélation</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        
+        corr_matrix = df[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].corr()
+        
+        fig = go.Figure(data=go.Heatmap(
+            z=corr_matrix.values,
+            x=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width'],
+            y=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width'],
+            colorscale=[[0, '#1a1a1a'], [0.5, '#ff6b9d'], [1, '#ff8fb3']],
+            text=corr_matrix.values.round(2),
+            texttemplate='%{text}',
+            textfont={"size": 12, "color": "white"},
+            colorbar=dict(
+                tickfont=dict(color='white'),
+                title=dict(text="Corrélation", font=dict(color='white'))
+            )
+        ))
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            height=400,
+            margin=dict(l=0, r=0, t=0, b=0)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Corrélations fortes")
+        
+        strong_corr = []
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i+1, len(corr_matrix.columns)):
+                if abs(corr_matrix.iloc[i, j]) > 0.8:
+                    strong_corr.append({
+                        'Var 1': corr_matrix.columns[i].replace('_', ' ').title(),
+                        'Var 2': corr_matrix.columns[j].replace('_', ' ').title(),
+                        'Corrélation': f"{corr_matrix.iloc[i, j]:.3f}"
+                    })
+        
+        if strong_corr:
+            for corr in strong_corr:
+                st.markdown(f"""
+                <div style="background: #242424; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ff6b9d;">
+                    <div style="color: #b3b3b3; font-size: 0.85rem;">{corr['Var 1']} ↔ {corr['Var 2']}</div>
+                    <div style="color: #ff6b9d; font-size: 1.25rem; font-weight: 600; margin-top: 0.25rem;">{corr['Corrélation']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Section 4: Distribution des variables
+    st.markdown('<div class="section-header">Distribution des caractéristiques</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    variables = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+    titles = ['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']
+    
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=titles,
+        vertical_spacing=0.15,
+        horizontal_spacing=0.1
+    )
+    
+    colors = {'setosa': '#ff6b9d', 'versicolor': '#ff8fb3', 'virginica': '#d4537a'}
+    
+    for idx, (var, title) in enumerate(zip(variables, titles)):
+        row = idx // 2 + 1
+        col = idx % 2 + 1
+        
+        for species in df['species'].unique():
+            species_data = df[df['species'] == species][var]
+            
+            fig.add_trace(
+                go.Violin(
+                    y=species_data,
+                    name=species,
+                    marker_color=colors[species],
+                    showlegend=(idx == 0),
+                    box_visible=True,
+                    meanline_visible=True
+                ),
+                row=row, col=col
+            )
+    
+    fig.update_layout(
+        height=600,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white', family='Inter'),
+        showlegend=True,
+        legend=dict(
+            bgcolor='rgba(26,26,26,0.8)',
+            bordercolor='#333',
+            borderwidth=1
+        ),
+        margin=dict(l=40, r=40, t=60, b=40)
+    )
+    
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor='#333', zeroline=False)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Section 5: Métriques rapides
+    st.markdown('<div class="section-header">Métriques du dataset</div>', unsafe_allow_html=True)
+    
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    
+    metrics = [
+        ("Total Échantillons", f"{len(df)}"),
+        ("Variables", f"{len(df.columns)-1}"),
+        ("Espèces", f"{df['species'].nunique()}"),
+        ("Valeurs Manquantes", f"{df.isnull().sum().sum()}"),
+        ("Moyenne Sepal", f"{df['sepal_length'].mean():.2f}"),
+        ("Moyenne Petal", f"{df['petal_length'].mean():.2f}")
+    ]
+    
+    for col, (label, value) in zip([col1, col2, col3, col4, col5, col6], metrics):
+        with col:
+            st.markdown(create_stat_box(label, value), unsafe_allow_html=True)
+
+# ====================================================================
+# PAGE 2: PRÉDICTION SIMPLE
+# ====================================================================
+
+elif st.session_state.current_page == "Prédiction Simple":
+    
+    st.markdown('<div class="section-header">Prédiction d\'espèce</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("Entrez les mesures de la fleur en centimètres pour obtenir une prédiction")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        sepal_length = st.number_input(
+            "Longueur du Sépale (cm)",
+            min_value=0.0,
+            max_value=10.0,
+            value=5.1,
+            step=0.1
+        )
+        
+        petal_length = st.number_input(
+            "Longueur du Pétale (cm)",
+            min_value=0.0,
+            max_value=10.0,
+            value=1.4,
+            step=0.1
+        )
+    
+    with col2:
+        sepal_width = st.number_input(
+            "Largeur du Sépale (cm)",
+            min_value=0.0,
+            max_value=10.0,
+            value=3.5,
+            step=0.1
+        )
+        
+        petal_width = st.number_input(
+            "Largeur du Pétale (cm)",
+            min_value=0.0,
+            max_value=10.0,
+            value=0.2,
+            step=0.1
+        )
+    
+    if st.button("Lancer la prédiction", use_container_width=True):
+        data = {
+            "sepal_length": sepal_length,
+            "sepal_width": sepal_width,
+            "petal_length": petal_length,
+            "petal_width": petal_width
+        }
+        
+        try:
+            with st.spinner("Analyse en cours..."):
+                response = requests.post(
+                    f"{api_url}/predict",
+                    json=data,
+                    timeout=10
+                )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if result['success']:
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Résultat
+                    st.markdown(f"""
+                    <div class="glass-card" style="text-align: center; padding: 3rem;">
+                        <div style="color: #6b6b6b; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">Espèce prédite</div>
+                        <div style="font-size: 3rem; font-weight: 700; background: linear-gradient(135deg, #ff6b9d 0%, #ff8fb3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 1rem 0;">{result['prediction'].upper()}</div>
+                        <div class="status-<function_calls>
+<invoke name="artifacts">
+<parameter name="command">update</parameter>
+<parameter name="id">streamlit_app</parameter>
+<parameter name="old_str">                        <div class="status-</parameter>
+<parameter name="new_str">                        <div class="status-badge">Confiance élevée</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Probabilités
+                    if result['probabilities']:
+                        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                        st.markdown("#### Probabilités par espèce")
+                        
+                        proba_data = pd.DataFrame(result['probabilities'])
+                        proba_data['probability'] = proba_data['probability'].astype(float)
+                        
+                        fig = go.Figure()
+                        
+                        colors_map = {
+                            'setosa': '#ff6b9d',
+                            'versicolor': '#ff8fb3',
+                            'virginica': '#d4537a'
+                        }
+                        
+                        for _, row in proba_data.iterrows():
+                            fig.add_trace(go.Bar(
+                                x=[row['probability']],
+                                y=[row['species']],
+                                orientation='h',
+                                marker=dict(color=colors_map.get(row['species'], '#ff6b9d')),
+                                text=f"{row['probability']}%",
+                                textposition='auto',
+                                name=row['species'],
+                                showlegend=False
+                            ))
+                        
+                        fig.update_layout(
+                            paper_bgcolor='rgba(0,0,0,0)',
+                            plot_bgcolor='rgba(0,0,0,0)',
+                            font=dict(color='white', family='Inter'),
+                            height=250,
+                            xaxis=dict(
+                                showgrid=True,
+                                gridcolor='#333',
+                                title="Probabilité (%)",
+                                range=[0, 100]
+                            ),
+                            yaxis=dict(showgrid=False, title=""),
+                            margin=dict(l=100, r=20, t=20, b=40)
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Données d'entrée
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("#### Données saisies")
+                    
+                    input_df = pd.DataFrame([{
+                        'Sepal Length': sepal_length,
+                        'Sepal Width': sepal_width,
+                        'Petal Length': petal_length,
+                        'Petal Width': petal_width
+                    }])
+                    
+                    st.dataframe(input_df, use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.error(f"Erreur: {result['error']}")
+            else:
+                st.error(f"Erreur HTTP {response.status_code}")
+        
+        except Exception as e:
+            st.error(f"Erreur de connexion: {str(e)}")
+    else:
+        st.markdown('</div>', unsafe_allow_html=True)
+# ====================================================================
+# PAGE 3: PRÉDICTIONS MULTIPLES (VERSION FINALE PROPRE)
+# ====================================================================
+
+elif st.session_state.current_page == "Prédictions Multiples":
+    
+    st.markdown('<div class="section-header">Prédictions par lot</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    with st.expander("📋 Format du fichier CSV requis"):
+        example_df = pd.DataFrame({
+            'sepal_length': [5.1, 6.2, 5.9],
+            'sepal_width': [3.5, 2.8, 3.0],
+            'petal_length': [1.4, 4.8, 5.1],
+            'petal_width': [0.2, 1.8, 1.8]
+        })
+        st.dataframe(example_df, use_container_width=True)
+        st.download_button(
+            label="📥 Télécharger l'exemple",
+            data=example_df.to_csv(index=False),
+            file_name="exemple_iris.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    
+    uploaded_file = st.file_uploader(
+        "Sélectionner un fichier CSV",
+        type=['csv', 'txt'],
+        help="Le fichier doit contenir les mesures des fleurs d'iris"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Détecter le séparateur automatiquement
+            content = uploaded_file.read().decode('utf-8')
+            uploaded_file.seek(0)
+            
+            if '\t' in content.split('\n')[0]:
+                separator = '\t'
+            elif ';' in content.split('\n')[0]:
+                separator = ';'
+            else:
+                separator = ','
+            
+            df = pd.read_csv(uploaded_file, sep=separator)
+            
+            # Mapping des colonnes
+            column_mapping = {
+                'SepalLength': 'sepal_length',
+                'SepalWidth': 'sepal_width',
+                'PetalLength': 'petal_length',
+                'PetalWidth': 'petal_width',
+                'Sepal.Length': 'sepal_length',
+                'Sepal.Width': 'sepal_width',
+                'Petal.Length': 'petal_length',
+                'Petal.Width': 'petal_width',
+                'sepal_length': 'sepal_length',
+                'sepal_width': 'sepal_width',
+                'petal_length': 'petal_length',
+                'petal_width': 'petal_width',
+                'sepal length': 'sepal_length',
+                'sepal width': 'sepal_width',
+                'petal length': 'petal_length',
+                'petal width': 'petal_width'
+            }
+            
+            # Renommer les colonnes
+            df = df.rename(columns=column_mapping)
+            
+            # Supprimer la colonne Species si elle existe
+            if 'Species' in df.columns:
+                df = df.drop('Species', axis=1)
+            
+            # Vérifier les colonnes nécessaires
+            required_cols = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            
+            if missing_cols:
+                st.error(f"❌ Le fichier ne contient pas toutes les colonnes nécessaires")
+                st.info("💡 Colonnes attendues : SepalLength, SepalWidth, PetalLength, PetalWidth")
+            else:
+                # Garder uniquement les colonnes nécessaires
+                df = df[required_cols]
+                
+                st.success(f"✅ Fichier chargé : {len(df)} échantillons")
+                
+                st.markdown("#### Aperçu des données")
+                st.dataframe(df.head(10), use_container_width=True)
+                
+                if st.button("🚀 Lancer les prédictions", use_container_width=True):
+                    try:
+                        # Nettoyer les données
+                        df_clean = df[required_cols].copy()
+                        
+                        # Convertir en float
+                        for col in required_cols:
+                            df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
+                        
+                        # Supprimer les lignes invalides
+                        df_clean = df_clean.dropna()
+                        
+                        if len(df_clean) == 0:
+                            st.error("❌ Aucune donnée valide dans le fichier")
+                        else:
+                            # Convertir en liste de dictionnaires
+                            samples = []
+                            for _, row in df_clean.iterrows():
+                                samples.append({
+                                    "sepal_length": float(row['sepal_length']),
+                                    "sepal_width": float(row['sepal_width']),
+                                    "petal_length": float(row['petal_length']),
+                                    "petal_width": float(row['petal_width'])
+                                })
+                            
+                            data = {"samples": samples}
+                            
+                            with st.spinner(f"⏳ Analyse de {len(samples)} échantillons en cours..."):
+                                response = requests.post(
+                                    f"{api_url}/predict_batch",
+                                    json=data,
+                                    timeout=30
+                                )
+                            
+                            if response.status_code == 200:
+                                result = response.json()
+                                
+                                if result['success']:
+                                    st.markdown('</div>', unsafe_allow_html=True)
+                                    
+                                    # Créer DataFrame avec résultats
+                                    predictions_list = []
+                                    for pred in result['predictions']:
+                                        row = pred['input'].copy()
+                                        row['prediction'] = pred['prediction']
+                                        predictions_list.append(row)
+                                    
+                                    results_df = pd.DataFrame(predictions_list)
+                                    
+                                    # Statistiques
+                                    col1, col2, col3, col4 = st.columns(4)
+                                    
+                                    pred_counts = results_df['prediction'].value_counts()
+                                    
+                                    with col1:
+                                        st.markdown(create_metric_card(
+                                            "Total",
+                                            f"{len(results_df)}",
+                                            "Prédictions"
+                                        ), unsafe_allow_html=True)
+                                    
+                                    with col2:
+                                        st.markdown(create_metric_card(
+                                            "Setosa",
+                                            f"{pred_counts.get('setosa', 0)}",
+                                            "Échantillons"
+                                        ), unsafe_allow_html=True)
+                                    
+                                    with col3:
+                                        st.markdown(create_metric_card(
+                                            "Versicolor",
+                                            f"{pred_counts.get('versicolor', 0)}",
+                                            "Échantillons"
+                                        ), unsafe_allow_html=True)
+                                    
+                                    with col4:
+                                        st.markdown(create_metric_card(
+                                            "Virginica",
+                                            f"{pred_counts.get('virginica', 0)}",
+                                            "Échantillons"
+                                        ), unsafe_allow_html=True)
+                                    
+                                    # Graphique
+                                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                                    st.markdown("#### Répartition des prédictions")
+                                    
+                                    fig = go.Figure(data=[go.Bar(
+                                        x=pred_counts.index,
+                                        y=pred_counts.values,
+                                        marker=dict(color=['#ff6b9d', '#ff8fb3', '#d4537a']),
+                                        text=pred_counts.values,
+                                        textposition='auto',
+                                        textfont=dict(color='white', size=14)
+                                    )])
+                                    
+                                    fig.update_layout(
+                                        paper_bgcolor='rgba(0,0,0,0)',
+                                        plot_bgcolor='rgba(0,0,0,0)',
+                                        font=dict(color='white', family='Inter'),
+                                        height=350,
+                                        xaxis=dict(showgrid=False, title="Espèce"),
+                                        yaxis=dict(showgrid=True, gridcolor='#333', title="Nombre"),
+                                        margin=dict(l=40, r=40, t=40, b=40)
+                                    )
+                                    
+                                    st.plotly_chart(fig, use_container_width=True)
+                                    st.markdown('</div>', unsafe_allow_html=True)
+                                    
+                                    # Tableau des résultats
+                                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                                    st.markdown("#### Résultats détaillés")
+                                    st.dataframe(results_df, use_container_width=True)
+                                    
+                                    # Téléchargement
+                                    csv = results_df.to_csv(index=False)
+                                    st.download_button(
+                                        label="📥 Télécharger les résultats",
+                                        data=csv,
+                                        file_name=f"predictions_iris_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                                        mime="text/csv",
+                                        use_container_width=True
+                                    )
+                                    st.markdown('</div>', unsafe_allow_html=True)
+                                else:
+                                    st.error(f"❌ Erreur lors de la prédiction")
+                            else:
+                                st.error(f"❌ Erreur de connexion à l'API")
+                    
+                    except Exception as e:
+                        st.error(f"❌ Une erreur est survenue lors du traitement")
+        
+        except Exception as e:
+            st.error(f"❌ Impossible de lire le fichier")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+# ====================================================================
+# PAGE 4: VISUALISATIONS
+# ====================================================================
+
+elif st.session_state.current_page == "Visualisations":
+    
+    st.markdown('<div class="section-header">Exploration visuelle des données</div>', unsafe_allow_html=True)
+    
+    df = load_iris_data()
+    
+    viz_type = st.selectbox(
+        "Type de visualisation",
+        ["Scatter Plot 2D", "Scatter Plot 3D", "Box Plot", "Distribution", "Pairplot"]
+    )
+    
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    colors_map = {'setosa': '#ff6b9d', 'versicolor': '#ff8fb3', 'virginica': '#d4537a'}
+    
+    if viz_type == "Scatter Plot 2D":
+        col1, col2 = st.columns(2)
+        with col1:
+            x_var = st.selectbox("Axe X", df.columns[:-1], index=2)
+        with col2:
+            y_var = st.selectbox("Axe Y", df.columns[:-1], index=3)
+        
+        fig = px.scatter(
+            df, x=x_var, y=y_var, color='species',
+            color_discrete_map=colors_map,
+            title=f"{x_var.replace('_', ' ').title()} vs {y_var.replace('_', ' ').title()}"
+        )
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            height=500,
+            xaxis=dict(showgrid=True, gridcolor='#333'),
+            yaxis=dict(showgrid=True, gridcolor='#333'),
+            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Scatter Plot 3D":
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            x_var = st.selectbox("Axe X", df.columns[:-1], index=0)
+        with col2:
+            y_var = st.selectbox("Axe Y", df.columns[:-1], index=1)
+        with col3:
+            z_var = st.selectbox("Axe Z", df.columns[:-1], index=2)
+        
+        fig = px.scatter_3d(
+            df, x=x_var, y=y_var, z=z_var, color='species',
+            color_discrete_map=colors_map
+        )
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            height=600,
+            scene=dict(
+                xaxis=dict(backgroundcolor='#1a1a1a', gridcolor='#333'),
+                yaxis=dict(backgroundcolor='#1a1a1a', gridcolor='#333'),
+                zaxis=dict(backgroundcolor='#1a1a1a', gridcolor='#333')
+            ),
+            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Box Plot":
+        var = st.selectbox("Variable à visualiser", df.columns[:-1])
+        
+        fig = go.Figure()
+        for species in df['species'].unique():
+            fig.add_trace(go.Box(
+                y=df[df['species'] == species][var],
+                name=species,
+                marker_color=colors_map[species]
+            ))
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            height=500,
+            title=f"Distribution de {var.replace('_', ' ').title()}",
+            yaxis=dict(showgrid=True, gridcolor='#333'),
+            xaxis=dict(showgrid=False),
+            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Distribution":
+        var = st.selectbox("Variable à visualiser", df.columns[:-1])
+        
+        fig = go.Figure()
+        for species in df['species'].unique():
+            fig.add_trace(go.Histogram(
+                x=df[df['species'] == species][var],
+                name=species,
+                marker_color=colors_map[species],
+                opacity=0.7
+            ))
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            height=500,
+            title=f"Distribution de {var.replace('_', ' ').title()}",
+            barmode='overlay',
+            xaxis=dict(showgrid=True, gridcolor='#333'),
+            yaxis=dict(showgrid=True, gridcolor='#333'),
+            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Pairplot":
+        st.info("Matrice de nuages de points de toutes les variables")
+        
+        from plotly.subplots import make_subplots
+        
+        vars_list = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+        fig = make_subplots(
+            rows=4, cols=4,
+            subplot_titles=[f"{v1.split('_')[0][0].upper()}{v1.split('_')[0][1]} vs {v2.split('_')[0][0].upper()}{v2.split('_')[0][1]}" 
+                          for v1 in vars_list for v2 in vars_list],
+            vertical_spacing=0.05,
+            horizontal_spacing=0.05
+        )
+        
+        for i, var1 in enumerate(vars_list):
+            for j, var2 in enumerate(vars_list):
+                for species in df['species'].unique():
+                    species_df = df[df['species'] == species]
+                    
+                    fig.add_trace(
+                        go.Scatter(
+                            x=species_df[var2],
+                            y=species_df[var1],
+                            mode='markers',
+                            name=species,
+                            marker=dict(color=colors_map[species], size=4),
+                            showlegend=(i==0 and j==0)
+                        ),
+                        row=i+1, col=j+1
+                    )
+        
+        fig.update_layout(
+            height=1000,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter', size=8),
+            showlegend=True,
+            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+        )
+        
+        fig.update_xaxes(showgrid=True, gridcolor='#333')
+        fig.update_yaxes(showgrid=True, gridcolor='#333')
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ====================================================================
+# PAGE 5: À PROPOS
+# ====================================================================
+
+elif st.session_state.current_page == "À propos":
+    
+    st.markdown('<div class="section-header">À propos du projet</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("""
+        #### Projet Académique
+        
+        Ce système de classification fait partie du **TP N°1: Classification des fleurs iris** dans le cadre du module 
+        **Introduction à l'Intelligence Artificielle et Machine Learning (INFO4111)**.
+        
+        #### Institution
+        
+        **Université de Yaoundé 1**  
+        École Normale Supérieure  
+        Département d'Informatique et des Technologies Éducatives
+        
+        #### Objectifs pédagogiques
+        
+        - Maîtrise de Python pour la data science
+        - Utilisation des bibliothèques ML (scikit-learn, pandas, numpy)
+        - Exploration et visualisation de données
+        - Préparation et normalisation des données
+        - Entraînement et évaluation de modèles
+        - Déploiement d'applications ML avec Flask et Streamlit
+        
+        #### Dataset Iris
+        
+        Le dataset Iris, collecté par Edgar Anderson et popularisé par Ronald Fisher en 1936, est l'un des ensembles 
+        de données les plus célèbres en apprentissage automatique. Il contient 150 échantillons de fleurs iris répartis 
+        en 3 espèces, avec 4 caractéristiques morphologiques mesurées pour chaque échantillon.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Technologies")
+        
+        technologies = [
+            ("Python", "Langage principal"),
+            ("scikit-learn", "Machine Learning"),
+            ("Pandas", "Manipulation de données"),
+            ("NumPy", "Calcul numérique"),
+            ("Plotly", "Visualisations"),
+            ("Flask", "API REST"),
+            ("Streamlit", "Interface web")
+        ]
+        
+        for tech, desc in technologies:
+            st.markdown(f"""
+            <div style="background: #242424; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 2px solid #ff6b9d;">
+                <div style="color: #ff6b9d; font-weight: 600;">{tech}</div>
+                <div style="color: #b3b3b3; font-size: 0.85rem;">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Informations du modèle
+    model_info = get_model_info(api_url)
+    if model_info:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Informations du modèle déployé")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(create_stat_box("Algorithme", model_info['model_name']), unsafe_allow_html=True)
+        with col2:
+            st.markdown(create_stat_box("Précision", model_info['accuracy']), unsafe_allow_html=True)
+        with col3:
+            st.markdown(create_stat_box("Date", model_info['training_date'].split()[0]), unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Credits
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("""
+    #### Crédits
+    
+    **Enseignant**: Stéphane C.K. TEKOUAB (PhD & Ing.)  
+    **Année académique**: 2025-2026
+    
+    www.tekouabou.com
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ====================================================================
+# FOOTER
+# ====================================================================
+
+st.markdown("""
+    <div class="footer">
+        <p>Iris Classification Platform - Université de Yaoundé 1</p>
+        <p style="margin-top: 0.5rem; font-size: 0.85rem;">
+            TP Machine Learning 2025-2026
+        </p>
+    </div>
+""", unsafe_allow_html=True)
