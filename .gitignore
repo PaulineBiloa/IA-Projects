@@ -12,7 +12,6 @@ ENV/
 .vscode/
 .idea/
 *.swp
-*.swo
 
 # OS
 .DS_Store
@@ -21,9 +20,9 @@ Thumbs.db
 # Streamlit
 .streamlit/secrets.toml
 
-# Modèles (trop lourds pour GitHub)
-*.pkl
+# Images PNG (trop lourdes)
+*.png
 
-# Data
+# CSV data files
 *.csv
 *.xlsx
