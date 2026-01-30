@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🌸 Iris Classification Platform
 
 Dashboard interactif pour la classification des espèces d'iris utilisant le Machine Learning.
@@ -40,3 +41,7 @@ TP-FLEUR/
 ├── requirements.txt     # Dépendances Python
 ├── .gitignore          # Fichiers à ignorer
 └── README.md           # Documentation
+=======
+# IA-Projects
+Code de l'apprentissage dans le domaine de l'IA
+>>>>>>> 2c17a7adbce3bf99c1f31d8aeef035bef410b357

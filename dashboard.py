@@ -507,6 +507,8 @@ if st.session_state.current_page == "Dashboard":
                 ),
                 row=row, col=col
             )
+
+            
     
     fig.update_layout(
         height=600,
