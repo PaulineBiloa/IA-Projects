@@ -50,18 +50,18 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
     :root {
-        --bg-primary: #0f0f0f;
-        --bg-secondary: #1a1a1a;
-        --bg-tertiary: #242424;
-        --accent-rose: #ff6b9d;
-        --accent-rose-dark: #d4537a;
-        --accent-rose-light: #ff8fb3;
-        --text-primary: #ffffff;
-        --text-secondary: #b3b3b3;
-        --text-muted: #6b6b6b;
-        --border-color: #333333;
-        --shadow: 0 8px 32px rgba(255, 107, 157, 0.1);
-        --shadow-hover: 0 12px 48px rgba(255, 107, 157, 0.2);
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --bg-tertiary: #f0f2f5;
+        --accent-blue: #2563eb;
+        --accent-blue-dark: #1d4ed8;
+        --accent-blue-light: #3b82f6;
+        --text-primary: #1f2937;
+        --text-secondary: #4b5563;
+        --text-muted: #9ca3af;
+        --border-color: #e5e7eb;
+        --shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+        --shadow-hover: 0 8px 32px rgba(37, 99, 235, 0.15);
     }
     
     * {
@@ -69,13 +69,13 @@ st.markdown("""
     }
     
     .stApp {
-        background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     }
     
     .main-header {
-        background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(212, 83, 122, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 107, 157, 0.1);
+        border: 1px solid rgba(37, 99, 235, 0.15);
         border-radius: 24px;
         padding: 2.5rem;
         margin-bottom: 3rem;
@@ -85,7 +85,7 @@ st.markdown("""
     .main-title {
         font-size: 3rem;
         font-weight: 700;
-        background: linear-gradient(135deg, #ff6b9d 0%, #ff8fb3 100%);
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
@@ -100,7 +100,7 @@ st.markdown("""
     }
     
     .glass-card {
-        background: rgba(26, 26, 26, 0.8);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         border: 1px solid var(--border-color);
         border-radius: 20px;
@@ -113,7 +113,7 @@ st.markdown("""
     .glass-card:hover {
         transform: translateY(-4px);
         box-shadow: var(--shadow-hover);
-        border-color: rgba(255, 107, 157, 0.3);
+        border-color: rgba(37, 99, 235, 0.3);
     }
     
     .metric-card {
@@ -127,9 +127,9 @@ st.markdown("""
     }
     
     .metric-card:hover {
-        border-color: var(--accent-rose);
+        border-color: var(--accent-blue);
         transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(255, 107, 157, 0.2);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
     }
     
     .metric-label {
@@ -142,7 +142,7 @@ st.markdown("""
     }
     
     .metric-value {
-        color: var(--accent-rose);
+        color: var(--accent-blue);
         font-size: 2rem;
         font-weight: 700;
         margin: 0.5rem 0;
@@ -155,7 +155,7 @@ st.markdown("""
     }
     
     .stButton > button {
-        background: linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-rose-dark) 100%);
+        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dark) 100%);
         color: white;
         border: none;
         border-radius: 12px;
@@ -163,18 +163,18 @@ st.markdown("""
         font-weight: 600;
         font-size: 1rem;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
         width: 100%;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(255, 107, 157, 0.4);
-        background: linear-gradient(135deg, var(--accent-rose-light) 0%, var(--accent-rose) 100%);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+        background: linear-gradient(135deg, var(--accent-blue-light) 0%, var(--accent-blue) 100%);
     }
     
     .stNumberInput > div > div > input, .stTextInput > div > div > input {
-        background: var(--bg-tertiary);
+        background: var(--bg-secondary);
         border: 1px solid var(--border-color);
         border-radius: 12px;
         color: var(--text-primary);
@@ -183,8 +183,8 @@ st.markdown("""
     }
     
     .stNumberInput > div > div > input:focus, .stTextInput > div > div > input:focus {
-        border-color: var(--accent-rose);
-        box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
     
     label {
@@ -211,7 +211,7 @@ st.markdown("""
     }
     
     .stat-box:hover {
-        border-color: var(--accent-rose);
+        border-color: var(--accent-blue);
         transform: translateY(-2px);
     }
     
@@ -235,9 +235,9 @@ st.markdown("""
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 600;
-        background: linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-rose-dark) 100%);
+        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dark) 100%);
         color: white;
-        box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
     }
     
     .footer {
@@ -508,7 +508,7 @@ if st.session_state.current_page == "Dashboard":
                 row=row, col=col
             )
 
-            
+
     
     fig.update_layout(
         height=600,
