@@ -47,207 +47,344 @@ MODEL, SCALER, MODEL_INFO = load_model_files()
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    :root {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8f9fa;
-        --bg-tertiary: #f0f2f5;
-        --accent-blue: #2563eb;
-        --accent-blue-dark: #1d4ed8;
-        --accent-blue-light: #3b82f6;
-        --text-primary: #1f2937;
-        --text-secondary: #4b5563;
-        --text-muted: #9ca3af;
-        --border-color: #e5e7eb;
-        --shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
-        --shadow-hover: 0 8px 32px rgba(37, 99, 235, 0.15);
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
     
     * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    :root {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1a2947;
+        --bg-tertiary: #243557;
+        --accent-primary: #06b6d4;
+        --accent-secondary: #0891b2;
+        --accent-light: #22d3ee;
+        --text-primary: #ffffff;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --success: #10b981;
+        --danger: #ef4444;
+        --shadow-sm: 0 2px 8px rgba(6, 182, 212, 0.1);
+        --shadow-md: 0 8px 24px rgba(6, 182, 212, 0.15);
+        --shadow-lg: 0 16px 40px rgba(6, 182, 212, 0.2);
+    }
+    
+    html, body {
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
     .stApp {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        background: var(--bg-primary);
+        color: var(--text-primary);
     }
     
+    /* Main Header */
     .main-header {
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(37, 99, 235, 0.15);
-        border-radius: 24px;
-        padding: 2.5rem;
-        margin-bottom: 3rem;
-        box-shadow: var(--shadow);
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        border-radius: 20px;
+        padding: clamp(1.5rem, 5vw, 3.5rem);
+        margin-bottom: clamp(1.5rem, 4vw, 3rem);
+        box-shadow: var(--shadow-md);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    
+    .main-header > * {
+        position: relative;
+        z-index: 1;
     }
     
     .main-title {
-        font-size: 3rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        font-size: clamp(1.8rem, 8vw, 3.5rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin: 0;
+        background-clip: text;
         letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
     }
     
     .main-subtitle {
         color: var(--text-secondary);
-        font-size: 1.1rem;
-        margin-top: 0.5rem;
+        font-size: clamp(0.85rem, 2vw, 1.1rem);
         font-weight: 400;
+        max-width: 600px;
     }
     
+    /* Cards */
     .glass-card {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(26, 41, 71, 0.6);
         backdrop-filter: blur(10px);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 2rem;
+        border: 1px solid rgba(6, 182, 212, 0.1);
+        border-radius: 16px;
+        padding: clamp(1.25rem, 3vw, 2rem);
         margin-bottom: 1.5rem;
-        box-shadow: var(--shadow);
-        transition: all 0.3s ease;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .glass-card:hover {
         transform: translateY(-4px);
-        box-shadow: var(--shadow-hover);
-        border-color: rgba(37, 99, 235, 0.3);
+        box-shadow: var(--shadow-md);
+        border-color: rgba(6, 182, 212, 0.4);
+        background: rgba(26, 41, 71, 0.8);
     }
     
+    /* Metric Cards */
     .metric-card {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
+        background: rgba(36, 53, 87, 0.4);
+        border: 1px solid rgba(6, 182, 212, 0.15);
+        border-radius: 14px;
+        padding: clamp(1rem, 2.5vw, 1.8rem);
         text-align: center;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     
     .metric-card:hover {
-        border-color: var(--accent-blue);
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+        border-color: rgba(6, 182, 212, 0.4);
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: var(--shadow-lg);
+        background: rgba(36, 53, 87, 0.7);
     }
     
     .metric-label {
         color: var(--text-muted);
-        font-size: 0.85rem;
-        font-weight: 500;
+        font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.5rem;
+        letter-spacing: 0.12em;
+        margin-bottom: 0.75rem;
     }
     
     .metric-value {
-        color: var(--accent-blue);
-        font-size: 2rem;
-        font-weight: 700;
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        font-weight: 800;
         margin: 0.5rem 0;
     }
     
     .metric-description {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-size: clamp(0.7rem, 1.5vw, 0.85rem);
         margin-top: 0.5rem;
     }
     
-    .stButton > button {
-        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dark) 100%);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
-        width: 100%;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
-        background: linear-gradient(135deg, var(--accent-blue-light) 0%, var(--accent-blue) 100%);
-    }
-    
-    .stNumberInput > div > div > input, .stTextInput > div > div > input {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        color: var(--text-primary);
-        padding: 0.75rem;
-        transition: all 0.3s ease;
-    }
-    
-    .stNumberInput > div > div > input:focus, .stTextInput > div > div > input:focus {
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-    
-    label {
-        color: var(--text-secondary) !important;
-        font-weight: 500 !important;
-        font-size: 0.95rem !important;
-    }
-    
+    /* Section Headers */
     .section-header {
         color: var(--text-primary);
-        font-size: 1.75rem;
-        font-weight: 600;
-        margin: 2rem 0 1rem 0;
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid var(--border-color);
+        font-size: clamp(1.3rem, 4vw, 2rem);
+        font-weight: 700;
+        margin: clamp(1.5rem, 3vw, 2.5rem) 0 clamp(0.75rem, 2vw, 1.5rem) 0;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid;
+        border-image: linear-gradient(90deg, var(--accent-primary), transparent) 1;
+        position: relative;
     }
     
+    /* Stat Box */
     .stat-box {
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
+        background: rgba(36, 53, 87, 0.4);
+        border: 1px solid rgba(6, 182, 212, 0.15);
         border-radius: 12px;
-        padding: 1.25rem;
+        padding: clamp(0.9rem, 2vw, 1.4rem);
         transition: all 0.3s ease;
+        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     
     .stat-box:hover {
-        border-color: var(--accent-blue);
-        transform: translateY(-2px);
+        border-color: rgba(6, 182, 212, 0.4);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+        background: rgba(36, 53, 87, 0.6);
     }
     
     .stat-title {
         color: var(--text-muted);
-        font-size: 0.8rem;
+        font-size: clamp(0.6rem, 1.3vw, 0.75rem);
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.12em;
         margin-bottom: 0.5rem;
     }
     
     .stat-value {
-        color: var(--text-primary);
-        font-size: 1.5rem;
-        font-weight: 600;
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: clamp(1.2rem, 3vw, 2rem);
+        font-weight: 800;
     }
     
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        color: #0f172a;
+        border: none;
+        border-radius: 10px;
+        padding: clamp(0.6rem, 1.5vw, 0.9rem) clamp(1.2rem, 3vw, 1.8rem);
+        font-weight: 700;
+        font-size: clamp(0.85rem, 2vw, 1rem);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--shadow-md);
+        width: 100%;
+        letter-spacing: 0.01em;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(-1px);
+    }
+    
+    /* Inputs */
+    .stNumberInput > div > div > input,
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div > select {
+        background: rgba(36, 53, 87, 0.4) !important;
+        border: 1px solid rgba(6, 182, 212, 0.2) !important;
+        border-radius: 10px !important;
+        color: var(--text-primary) !important;
+        padding: clamp(0.6rem, 1.5vw, 0.9rem) !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-size: clamp(0.85rem, 2vw, 1rem) !important;
+    }
+    
+    .stNumberInput > div > div > input:focus,
+    .stTextInput > div > div > input:focus,
+    .stSelectbox > div > div > select:focus {
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25) !important;
+        background: rgba(36, 53, 87, 0.6) !important;
+    }
+    
+    label {
+        color: var(--text-secondary) !important;
+        font-weight: 700 !important;
+        font-size: clamp(0.8rem, 1.8vw, 0.95rem) !important;
+        letter-spacing: 0.01em !important;
+    }
+    
+    /* Status Badge */
     .status-badge {
         display: inline-block;
-        padding: 0.35rem 0.85rem;
+        padding: clamp(0.4rem, 1vw, 0.6rem) clamp(0.8rem, 2vw, 1.2rem);
         border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dark) 100%);
+        font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
         color: white;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        box-shadow: var(--shadow-md);
+        letter-spacing: 0.01em;
     }
     
+    /* Navigation Buttons Container */
+    .nav-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Footer */
     .footer {
         text-align: center;
         color: var(--text-muted);
-        padding: 2rem;
-        margin-top: 4rem;
-        border-top: 1px solid var(--border-color);
+        padding: clamp(1.5rem, 3vw, 2.5rem);
+        margin-top: clamp(2rem, 5vw, 4rem);
+        border-top: 1px solid rgba(6, 182, 212, 0.1);
     }
     
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .main-header {
+            padding: 1.5rem;
+        }
+        
+        .section-header {
+            font-size: 1.4rem;
+            margin: 1.5rem 0 0.8rem 0;
+        }
+        
+        .metric-card, .stat-box {
+            min-height: 120px;
+        }
+        
+        .glass-card {
+            padding: 1.25rem;
+        }
+        
+        .stColumns {
+            gap: 0.75rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .main-title {
+            font-size: 1.8rem;
+        }
+        
+        .main-subtitle {
+            font-size: 0.9rem;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+        }
+        
+        .stButton > button {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .stColumns {
+            gap: 0.5rem !important;
+        }
+    }
+    
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Hide streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -305,23 +442,72 @@ st.markdown("""
 if 'current_page' not in st.session_state:
     st.session_state.current_page = "Dashboard"
 
-col1, col2, col3, col4, col5 = st.columns(5)
+# Navigation buttons - horizontal inline layout
+st.markdown("""
+    <style>
+    .nav-buttons {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    
+    .nav-buttons button {
+        flex: 1;
+        min-width: 140px;
+        padding: 0.7rem 1.2rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+        transition: all 0.3s ease !important;
+        white-space: nowrap;
+    }
+    
+    @media (max-width: 768px) {
+        .nav-buttons {
+            gap: 0.5rem;
+        }
+        
+        .nav-buttons button {
+            flex: 0 1 calc(50% - 0.25rem) !important;
+            min-width: 100px !important;
+            font-size: 0.8rem !important;
+            padding: 0.6rem 0.9rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .nav-buttons {
+            gap: 0.4rem;
+        }
+        
+        .nav-buttons button {
+            flex: 0 1 calc(50% - 0.2rem) !important;
+            min-width: 85px !important;
+            font-size: 0.75rem !important;
+            padding: 0.5rem 0.7rem !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-with col1:
-    if st.button("Dashboard", width=True, key="nav_dashboard"):
-        st.session_state.current_page = "Dashboard"
-with col2:
-    if st.button("Prédiction Simple", width=True, key="nav_predict"):
-        st.session_state.current_page = "Prédiction Simple"
-with col3:
-    if st.button("Prédictions Multiples", width=True, key="nav_batch"):
-        st.session_state.current_page = "Prédictions Multiples"
-with col4:
-    if st.button("Visualisations", width=True, key="nav_viz"):
-        st.session_state.current_page = "Visualisations"
-with col5:
-    if st.button("À propos", width=True, key="nav_about"):
-        st.session_state.current_page = "À propos"
+# Create horizontal layout for navigation buttons
+nav_cols = st.columns([1, 1, 1, 1, 1], gap="small")
+
+nav_buttons = [
+    ("Dashboard", "nav_dashboard"),
+    ("Prédiction Simple", "nav_predict"),
+    ("Prédictions Multiples", "nav_batch"),
+    ("Visualisations", "nav_viz"),
+    ("À propos", "nav_about")
+]
+
+for col, (label, key) in zip(nav_cols, nav_buttons):
+    with col:
+        if st.button(label, use_container_width=True, key=key):
+            st.session_state.current_page = label
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -348,7 +534,7 @@ if st.session_state.current_page == "Dashboard":
     # Section 2: Statistiques du dataset
     st.markdown('<div class="section-header">Analyse statistique du dataset</div>', unsafe_allow_html=True)
     
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([1.5, 1], gap="medium")
     
     with col1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -380,7 +566,7 @@ if st.session_state.current_page == "Dashboard":
             margin=dict(l=0, r=0, t=0, b=0)
         )
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
@@ -393,8 +579,8 @@ if st.session_state.current_page == "Dashboard":
             labels=species_counts.index,
             values=species_counts.values,
             hole=0.6,
-            marker=dict(colors=['#ff6b9d', '#ff8fb3', '#d4537a']),
-            textfont=dict(color='white', size=14, family='Inter')
+            marker=dict(colors=['#06b6d4', '#8b5cf6', '#10b981']),
+            textfont=dict(color='#0f172a', size=14, family='Poppins', weight='bold')
         )])
         
         fig.update_layout(
@@ -402,14 +588,16 @@ if st.session_state.current_page == "Dashboard":
             plot_bgcolor='rgba(0,0,0,0)',
             showlegend=True,
             legend=dict(
-                font=dict(color='white', family='Inter'),
-                bgcolor='rgba(26,26,26,0.5)'
+                font=dict(color='#cbd5e1', family='Poppins', size=11),
+                bgcolor='rgba(26, 41, 71, 0.8)',
+                bordercolor='rgba(6, 182, 212, 0.2)',
+                borderwidth=1
             ),
             height=250,
             margin=dict(l=20, r=20, t=20, b=20)
         )
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Section 3: Corrélations
@@ -444,7 +632,7 @@ if st.session_state.current_page == "Dashboard":
             margin=dict(l=0, r=0, t=0, b=0)
         )
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
@@ -464,9 +652,9 @@ if st.session_state.current_page == "Dashboard":
         if strong_corr:
             for corr in strong_corr:
                 st.markdown(f"""
-                <div style="background: #242424; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ff6b9d;">
-                    <div style="color: #b3b3b3; font-size: 0.85rem;">{corr['Var 1']} ↔ {corr['Var 2']}</div>
-                    <div style="color: #ff6b9d; font-size: 1.25rem; font-weight: 600; margin-top: 0.25rem;">{corr['Corrélation']}</div>
+                <div style="background: rgba(36, 53, 87, 0.4); padding: 1rem; border-radius: 10px; margin-bottom: 0.5rem; border-left: 3px solid #06b6d4; border: 1px solid rgba(6, 182, 212, 0.2);">
+                    <div style="color: #cbd5e1; font-size: 0.85rem; font-family: Poppins;">{corr['Var 1']} ↔ {corr['Var 2']}</div>
+                    <div style="color: #22d3ee; font-size: 1.25rem; font-weight: 700; margin-top: 0.25rem; font-family: Poppins;">{corr['Corrélation']}</div>
                 </div>
                 """, unsafe_allow_html=True)
         
@@ -487,7 +675,7 @@ if st.session_state.current_page == "Dashboard":
         horizontal_spacing=0.1
     )
     
-    colors = {'setosa': '#ff6b9d', 'versicolor': '#ff8fb3', 'virginica': '#d4537a'}
+    colors = {'setosa': '#06b6d4', 'versicolor': '#8b5cf6', 'virginica': '#10b981'}
     
     for idx, (var, title) in enumerate(zip(variables, titles)):
         row = idx // 2 + 1
@@ -514,20 +702,21 @@ if st.session_state.current_page == "Dashboard":
         height=600,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white', family='Inter'),
+        font=dict(color='#cbd5e1', family='Poppins'),
         showlegend=True,
         legend=dict(
-            bgcolor='rgba(26,26,26,0.8)',
-            bordercolor='#333',
-            borderwidth=1
+            bgcolor='rgba(26, 41, 71, 0.8)',
+            bordercolor='rgba(6, 182, 212, 0.2)',
+            borderwidth=1,
+            font=dict(family='Poppins', size=11)
         ),
         margin=dict(l=40, r=40, t=60, b=40)
     )
     
     fig.update_xaxes(showgrid=False, zeroline=False)
-    fig.update_yaxes(showgrid=True, gridcolor='#333', zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)', zeroline=False)
     
-    st.plotly_chart(fig, width=True)
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Section 5: Métriques rapides
@@ -570,7 +759,7 @@ elif st.session_state.current_page == "Prédiction Simple":
             sepal_width = st.number_input("Largeur du Sépale (cm)", 0.0, 10.0, 3.5, 0.1)
             petal_width = st.number_input("Largeur du Pétale (cm)", 0.0, 10.0, 0.2, 0.1)
         
-        if st.button("Lancer la prédiction", width=True):
+        if st.button("Lancer la prédiction", use_container_width=True):
             try:
                 features = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
                 features_scaled = SCALER.transform(features)
@@ -584,8 +773,8 @@ elif st.session_state.current_page == "Prédiction Simple":
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown(f"""
                 <div class="glass-card" style="text-align: center; padding: 3rem;">
-                    <div style="color: #6b6b6b; font-size: 0.9rem; text-transform: uppercase;">Espèce prédite</div>
-                    <div style="font-size: 3rem; font-weight: 700; background: linear-gradient(135deg, #ff6b9d 0%, #ff8fb3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 1rem 0;">{prediction.upper()}</div>
+                    <div style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; font-family: Poppins; letter-spacing: 0.1em; font-weight: 700;">Espèce prédite</div>
+                    <div style="font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 1rem 0; font-family: Poppins;">{prediction.upper()}</div>
                     <div class="status-badge">Confiance élevée</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -593,7 +782,7 @@ elif st.session_state.current_page == "Prédiction Simple":
                 if probabilities:
                     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
                     st.markdown("#### Probabilités par espèce")
-                    st.dataframe(pd.DataFrame(probabilities), width=True)
+                    st.dataframe(pd.DataFrame(probabilities), use_container_width=True)
                     st.markdown('</div>', unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Erreur: {str(e)}")
@@ -614,8 +803,8 @@ elif st.session_state.current_page == "Prédictions Multiples":
         
         with st.expander("📋 Format du fichier CSV requis"):
             example_df = pd.DataFrame({'sepal_length': [5.1, 6.2, 5.9], 'sepal_width': [3.5, 2.8, 3.0], 'petal_length': [1.4, 4.8, 5.1], 'petal_width': [0.2, 1.8, 1.8]})
-            st.dataframe(example_df, width=True)
-            st.download_button(label="📥 Télécharger l'exemple", data=example_df.to_csv(index=False), file_name="exemple_iris.csv", mime="text/csv", width=True)
+            st.dataframe(example_df, use_container_width=True)
+            st.download_button(label="📥 Télécharger l'exemple", data=example_df.to_csv(index=False), file_name="exemple_iris.csv", mime="text/csv", use_container_width=True)
         
         uploaded_file = st.file_uploader("Sélectionner un fichier CSV", type=['csv', 'txt'])
         
@@ -642,9 +831,9 @@ elif st.session_state.current_page == "Prédictions Multiples":
                 else:
                     df = df[required_cols]
                     st.success(f"✅ Fichier chargé : {len(df)} échantillons")
-                    st.dataframe(df.head(10), width=True)
+                    st.dataframe(df.head(10), use_container_width=True)
                     
-                    if st.button("🚀 Lancer les prédictions", width=True):
+                    if st.button("🚀 Lancer les prédictions", use_container_width=True):
                         try:
                             df_clean = df.copy()
                             for col in required_cols:
@@ -674,16 +863,16 @@ elif st.session_state.current_page == "Prédictions Multiples":
                                 
                                 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
                                 st.markdown("#### Répartition des prédictions")
-                                fig = go.Figure(data=[go.Bar(x=pred_counts.index, y=pred_counts.values, marker=dict(color=['#ff6b9d', '#ff8fb3', '#d4537a']), text=pred_counts.values, textposition='auto', textfont=dict(color='white', size=14))])
-                                fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='white', family='Inter'), height=350, xaxis=dict(showgrid=False, title="Espèce"), yaxis=dict(showgrid=True, gridcolor='#333', title="Nombre"), margin=dict(l=40, r=40, t=40, b=40))
-                                st.plotly_chart(fig, width=True)
+                                fig = go.Figure(data=[go.Bar(x=pred_counts.index, y=pred_counts.values, marker=dict(color=['#06b6d4', '#8b5cf6', '#10b981']), text=pred_counts.values, textposition='auto', textfont=dict(color='#0f172a', size=14, family='Poppins'))])
+                                fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#cbd5e1', family='Poppins'), height=350, xaxis=dict(showgrid=False, title="Espèce"), yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)', title="Nombre"), margin=dict(l=40, r=40, t=40, b=40))
+                                st.plotly_chart(fig, use_container_width=True)
                                 st.markdown('</div>', unsafe_allow_html=True)
                                 
                                 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
                                 st.markdown("#### Résultats détaillés")
-                                st.dataframe(results_df, width=True)
+                                st.dataframe(results_df, use_container_width=True)
                                 csv = results_df.to_csv(index=False)
-                                st.download_button(label="📥 Télécharger les résultats", data=csv, file_name=f"predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", mime="text/csv", width=True)
+                                st.download_button(label="📥 Télécharger les résultats", data=csv, file_name=f"predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", mime="text/csv", use_container_width=True)
                                 st.markdown('</div>', unsafe_allow_html=True)
                         except Exception as e:
                             st.error(f"❌ Erreur: {str(e)}")
@@ -707,7 +896,7 @@ elif st.session_state.current_page == "Visualisations":
     
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-    colors_map = {'setosa': '#ff6b9d', 'versicolor': '#ff8fb3', 'virginica': '#d4537a'}
+    colors_map = {'setosa': '#06b6d4', 'versicolor': '#8b5cf6', 'virginica': '#10b981'}
     
     if viz_type == "Scatter Plot 2D":
         col1, col2 = st.columns(2)
@@ -725,14 +914,14 @@ elif st.session_state.current_page == "Visualisations":
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            font=dict(color='#cbd5e1', family='Poppins'),
             height=500,
-            xaxis=dict(showgrid=True, gridcolor='#333'),
-            yaxis=dict(showgrid=True, gridcolor='#333'),
-            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+            xaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
         )
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
     elif viz_type == "Scatter Plot 3D":
         col1, col2, col3 = st.columns(3)
@@ -750,17 +939,17 @@ elif st.session_state.current_page == "Visualisations":
         
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            font=dict(color='#cbd5e1', family='Poppins'),
             height=600,
             scene=dict(
-                xaxis=dict(backgroundcolor='#1a1a1a', gridcolor='#333'),
-                yaxis=dict(backgroundcolor='#1a1a1a', gridcolor='#333'),
-                zaxis=dict(backgroundcolor='#1a1a1a', gridcolor='#333')
+                xaxis=dict(backgroundcolor='#0f172a', gridcolor='rgba(6, 182, 212, 0.1)'),
+                yaxis=dict(backgroundcolor='#0f172a', gridcolor='rgba(6, 182, 212, 0.1)'),
+                zaxis=dict(backgroundcolor='#0f172a', gridcolor='rgba(6, 182, 212, 0.1)')
             ),
-            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
         )
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
     elif viz_type == "Box Plot":
         var = st.selectbox("Variable à visualiser", df.columns[:-1])
@@ -776,15 +965,15 @@ elif st.session_state.current_page == "Visualisations":
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            font=dict(color='#cbd5e1', family='Poppins'),
             height=500,
             title=f"Distribution de {var.replace('_', ' ').title()}",
-            yaxis=dict(showgrid=True, gridcolor='#333'),
+            yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
             xaxis=dict(showgrid=False),
-            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
         )
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
     elif viz_type == "Distribution":
         var = st.selectbox("Variable à visualiser", df.columns[:-1])
@@ -801,16 +990,16 @@ elif st.session_state.current_page == "Visualisations":
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter'),
+            font=dict(color='#cbd5e1', family='Poppins'),
             height=500,
             title=f"Distribution de {var.replace('_', ' ').title()}",
             barmode='overlay',
-            xaxis=dict(showgrid=True, gridcolor='#333'),
-            yaxis=dict(showgrid=True, gridcolor='#333'),
-            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+            xaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
         )
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
     elif viz_type == "Pairplot":
         st.info("Matrice de nuages de points de toutes les variables")
@@ -845,15 +1034,15 @@ elif st.session_state.current_page == "Visualisations":
             height=1000,
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', family='Inter', size=8),
+            font=dict(color='#cbd5e1', family='Poppins', size=8),
             showlegend=True,
-            legend=dict(bgcolor='rgba(26,26,26,0.8)', bordercolor='#333', borderwidth=1)
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=10))
         )
         
-        fig.update_xaxes(showgrid=True, gridcolor='#333')
-        fig.update_yaxes(showgrid=True, gridcolor='#333')
+        fig.update_xaxes(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)')
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)')
         
-        st.plotly_chart(fig, width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -914,9 +1103,9 @@ elif st.session_state.current_page == "À propos":
         
         for tech, desc in technologies:
             st.markdown(f"""
-            <div style="background: #242424; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 2px solid #ff6b9d;">
-                <div style="color: #ff6b9d; font-weight: 600;">{tech}</div>
-                <div style="color: #b3b3b3; font-size: 0.85rem;">{desc}</div>
+            <div style="background: rgba(36, 53, 87, 0.4); padding: 0.75rem; border-radius: 10px; margin-bottom: 0.5rem; border-left: 3px solid #06b6d4; border: 1px solid rgba(6, 182, 212, 0.2);">
+                <div style="color: #22d3ee; font-weight: 700; font-family: Poppins;">{tech}</div>
+                <div style="color: #cbd5e1; font-size: 0.85rem; font-family: Poppins; margin-top: 0.3rem;">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
         

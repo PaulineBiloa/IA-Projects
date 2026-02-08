@@ -1,1512 +1,1140 @@
-# TP N°1 : Classification des fleurs iris
-# Theme : Rose et Violet clair
-# -*- coding: utf-8 -*-
+# ====================================================================
+# FICHIER : dashboard.py
+# Dashboard Streamlit Premium - Classification des Iris
+# Version finale avec prédictions locales
+# ====================================================================
 
-import sys
-import io
-
-# Correction pour l'encodage Windows
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-# Bibliotheques pour la manipulation des donnees
+import streamlit as st
 import pandas as pd
 import numpy as np
-
-# Bibliotheques pour la visualisation
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-# Configuration pour de meilleurs graphiques avec theme rose-violet
-plt.style.use('seaborn-v0_8-darkgrid')
-
-# Palette de couleurs rose-violet personnalisee
-PALETTE_ROSE_VIOLET = ['#FFB3D9', '#E6B3FF', '#D4A5D4', '#F8B8D8', '#E0B3E6']
-COULEUR_PRINCIPALE = '#E6B3FF'
-COULEUR_SECONDAIRE = '#FFB3D9'
-COULEUR_TERTIAIRE = '#D4A5D4'
-
-print("OK - Toutes les bibliotheques ont ete importees avec succes!")
-print("=" * 60)
-
-# ====================================================================
-# ETAPE 2 : CHARGEMENT ET EXPLORATION DES DONNEES
-# ====================================================================
-
-# Charger le dataset Iris depuis sklearn
-from sklearn.datasets import load_iris
-
-# Charger les donnees
-iris = load_iris()
-
-# Creer un DataFrame pandas pour faciliter la manipulation
-df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
-df['species'] = iris.target
-
-# Mapper les numeros aux noms d'especes
-species_names = {0: 'setosa', 1: 'versicolor', 2: 'virginica'}
-df['species'] = df['species'].map(species_names)
-
-# Renommer les colonnes pour simplifier
-df.columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species']
-
-print("\n[APERCU DES DONNEES]")
-print("=" * 60)
-print("\n1. Les 5 premieres lignes du dataset :")
-print(df.head())
-
-print("\n2. Informations sur le dataset :")
-print(df.info())
-
-print("\n3. Statistiques descriptives :")
-print(df.describe())
-
-print("\n4. Verification des valeurs manquantes :")
-print(df.isnull().sum())
-
-print("\n5. Nombre d'echantillons par espece :")
-print(df['species'].value_counts())
-
-# ====================================================================
-# VISUALISATION DE LA REPARTITION DES ESPECES
-# ====================================================================
-
-print("\n[CREATION DES GRAPHIQUES...]")
-
-# Creer une figure avec plusieurs sous-graphiques
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-fig.patch.set_facecolor('#FFF5FA')
-
-# Graphique 1 : Diagramme en barres (countplot)
-sns.countplot(x='species', data=df, ax=axes[0], palette=PALETTE_ROSE_VIOLET)
-axes[0].set_title('Distribution des especes d\'iris', fontsize=14, fontweight='bold', color='#8B4789')
-axes[0].set_xlabel('Espece', fontsize=12, color='#8B4789')
-axes[0].set_ylabel('Nombre d\'echantillons', fontsize=12, color='#8B4789')
-axes[0].set_facecolor('#FFF5FA')
-
-# Graphique 2 : Diagramme circulaire (pie chart)
-species_counts = df['species'].value_counts()
-axes[1].pie(species_counts, labels=species_counts.index, autopct='%1.1f%%', 
-            startangle=90, colors=PALETTE_ROSE_VIOLET,
-            textprops={'fontsize': 11, 'color': '#8B4789'})
-axes[1].set_title('Repartition en pourcentage', fontsize=14, fontweight='bold', color='#8B4789')
-
-plt.tight_layout()
-plt.savefig('distribution_especes.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : distribution_especes.png")
-
-# ====================================================================
-# EXERCICE 1 : DIFFERENTES VISUALISATIONS DES ESPECES
-# ====================================================================
-
-print("\n[EXERCICE 1 : Visualisations variees]")
-print("=" * 60)
-
-# Afficher les effectifs
-print("\n1. Effectifs de chaque modalite :")
-effectifs = df['species'].value_counts()
-print(effectifs)
-
-# Creer une figure avec 4 types de visualisations
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.patch.set_facecolor('#FFF5FA')
-
-# a) Histogramme
-axes[0, 0].bar(effectifs.index, effectifs.values, color=PALETTE_ROSE_VIOLET, edgecolor='#8B4789', linewidth=1.5)
-axes[0, 0].set_title('a) Histogramme', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0, 0].set_ylabel('Effectif', color='#8B4789')
-axes[0, 0].set_xlabel('Espece', color='#8B4789')
-axes[0, 0].set_facecolor('#FFF5FA')
-for i, v in enumerate(effectifs.values):
-    axes[0, 0].text(i, v + 1, str(v), ha='center', fontweight='bold', color='#8B4789')
-
-# b) Diagramme en secteurs (Pie chart)
-axes[0, 1].pie(effectifs.values, labels=effectifs.index, autopct='%1.1f%%', 
-               startangle=90, colors=PALETTE_ROSE_VIOLET,
-               explode=(0.05, 0.05, 0.05),
-               textprops={'fontsize': 10, 'color': '#8B4789'})
-axes[0, 1].set_title('b) Diagramme en secteurs', fontsize=12, fontweight='bold', color='#8B4789')
-
-# c) Barres horizontales groupees
-axes[1, 0].barh(effectifs.index, effectifs.values, color=PALETTE_ROSE_VIOLET, edgecolor='#8B4789', linewidth=1.5)
-axes[1, 0].set_title('c) Barres horizontales', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1, 0].set_xlabel('Effectif', color='#8B4789')
-axes[1, 0].set_ylabel('Espece', color='#8B4789')
-axes[1, 0].set_facecolor('#FFF5FA')
-for i, v in enumerate(effectifs.values):
-    axes[1, 0].text(v + 1, i, str(v), va='center', fontweight='bold', color='#8B4789')
-
-# d) Graphique en cascade (waterfall-style)
-cumsum = np.cumsum([0] + list(effectifs.values))
-axes[1, 1].bar(range(len(effectifs)), effectifs.values, 
-               bottom=cumsum[:-1], color=PALETTE_ROSE_VIOLET, edgecolor='#8B4789', linewidth=1.5)
-axes[1, 1].set_title('d) Graphique en cascade', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1, 1].set_xticks(range(len(effectifs)))
-axes[1, 1].set_xticklabels(effectifs.index)
-axes[1, 1].set_ylabel('Effectif cumule', color='#8B4789')
-axes[1, 1].set_facecolor('#FFF5FA')
-
-plt.tight_layout()
-plt.savefig('exercice1_visualisations.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : exercice1_visualisations.png")
-print("\nMeilleure representation : Le diagramme en barres (histogramme)")
-print("Raison : Il permet de comparer facilement les effectifs egaux entre especes.")
-
-# ====================================================================
-# EXERCICE 2 : ANALYSE DES VARIABLES QUANTITATIVES
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[EXERCICE 2 : Analyse des variables quantitatives]")
-print("=" * 60)
-
-# 1. Resume statistique de la longueur du petale
-print("\n1. Resume statistique - Longueur du petale (petal_length):")
-print("-" * 60)
-print(df['petal_length'].describe())
-print(f"\nMode : {df['petal_length'].mode()[0]}")
-print(f"Variance : {df['petal_length'].var():.4f}")
-print(f"Ecart-type : {df['petal_length'].std():.4f}")
-
-# 2. Visualisation des 4 variables quantitatives
-print("\n2. Creation des histogrammes pour toutes les variables...")
-
-# Creer une figure avec 4 histogrammes
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle('Distribution des variables quantitatives', fontsize=16, fontweight='bold', color='#8B4789')
-fig.patch.set_facecolor('#FFF5FA')
-
-# Liste des variables quantitatives
-variables = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
-titres = ['Longueur du Sepale (cm)', 'Largeur du Sepale (cm)', 
-          'Longueur du Petale (cm)', 'Largeur du Petale (cm)']
-
-# Creer les histogrammes
-for idx, (var, titre) in enumerate(zip(variables, titres)):
-    row = idx // 2
-    col = idx % 2
-    
-    # Histogramme avec courbe de densite
-    axes[row, col].hist(df[var], bins=20, color=COULEUR_PRINCIPALE, edgecolor='#8B4789', alpha=0.7)
-    axes[row, col].set_title(titre, fontsize=12, fontweight='bold', color='#8B4789')
-    axes[row, col].set_xlabel('Valeur (cm)', fontsize=10, color='#8B4789')
-    axes[row, col].set_ylabel('Frequence', fontsize=10, color='#8B4789')
-    axes[row, col].grid(axis='y', alpha=0.3, color='#D4A5D4')
-    axes[row, col].set_facecolor('#FFF5FA')
-    
-    # Ajouter une ligne verticale pour la moyenne
-    mean_val = df[var].mean()
-    axes[row, col].axvline(mean_val, color='#C71585', linestyle='--', linewidth=2, label=f'Moyenne: {mean_val:.2f}')
-    axes[row, col].legend()
-
-plt.tight_layout()
-plt.savefig('exercice2_histogrammes.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : exercice2_histogrammes.png")
-
-# 3. Tableau recapitulatif des statistiques
-print("\n3. Tableau recapitulatif des statistiques descriptives :")
-print("-" * 60)
-stats_summary = df[variables].describe().T
-stats_summary['variance'] = df[variables].var()
-print(stats_summary)
-
-# ====================================================================
-# EXERCICE 3 : ETUDE BIVARIEE - NUAGE DE POINTS
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[EXERCICE 3 : Etude bivariee - Nuage de points]")
-print("=" * 60)
-
-# 1. Nuage de points : Longueur vs Largeur du petale
-print("\n1. Nuage de points : Longueur vs Largeur du petale")
-
-fig, axes = plt.subplots(1, 2, figsize=(16, 6))
-fig.patch.set_facecolor('#FFF5FA')
-
-# Graphique 1 : Sans distinction d'espece
-axes[0].scatter(df['petal_length'], df['petal_width'], alpha=0.7, s=60, color=COULEUR_PRINCIPALE, edgecolors='#8B4789')
-axes[0].set_xlabel('Longueur du petale (cm)', fontsize=12, color='#8B4789')
-axes[0].set_ylabel('Largeur du petale (cm)', fontsize=12, color='#8B4789')
-axes[0].set_title('Relation Longueur-Largeur du petale (toutes especes)', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].grid(True, alpha=0.3, color='#D4A5D4')
-axes[0].set_facecolor('#FFF5FA')
-
-# Graphique 2 : Avec distinction par espece
-colors = {'setosa': '#FFB3D9', 'versicolor': '#E6B3FF', 'virginica': '#D4A5D4'}
-for species in df['species'].unique():
-    subset = df[df['species'] == species]
-    axes[1].scatter(subset['petal_length'], subset['petal_width'], 
-                   label=species, alpha=0.7, s=60, color=colors[species], edgecolors='#8B4789')
-
-axes[1].set_xlabel('Longueur du petale (cm)', fontsize=12, color='#8B4789')
-axes[1].set_ylabel('Largeur du petale (cm)', fontsize=12, color='#8B4789')
-axes[1].set_title('Relation Longueur-Largeur du petale (par espece)', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].legend()
-axes[1].grid(True, alpha=0.3, color='#D4A5D4')
-axes[1].set_facecolor('#FFF5FA')
-
-plt.tight_layout()
-plt.savefig('exercice3_nuage_points_petale.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : exercice3_nuage_points_petale.png")
-print("\nCommentaire : On observe une correlation positive forte entre la longueur")
-print("et la largeur du petale. Les trois especes forment des groupes distincts.")
-
-# 2. Autre croisement : Longueur du sepale vs Longueur du petale
-print("\n2. Autre croisement : Longueur du sepale vs Longueur du petale")
-
-fig = plt.figure(figsize=(10, 6))
-fig.patch.set_facecolor('#FFF5FA')
-ax = fig.add_subplot(111)
-ax.set_facecolor('#FFF5FA')
-
-for species in df['species'].unique():
-    subset = df[df['species'] == species]
-    ax.scatter(subset['sepal_length'], subset['petal_length'], 
-               label=species, alpha=0.7, s=60, color=colors[species], edgecolors='#8B4789')
-
-ax.set_xlabel('Longueur du sepale (cm)', fontsize=12, color='#8B4789')
-ax.set_ylabel('Longueur du petale (cm)', fontsize=12, color='#8B4789')
-ax.set_title('Relation Longueur du sepale vs Longueur du petale', fontsize=14, fontweight='bold', color='#8B4789')
-ax.legend()
-ax.grid(True, alpha=0.3, color='#D4A5D4')
-plt.tight_layout()
-plt.savefig('exercice3_sepale_petale.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : exercice3_sepale_petale.png")
-print("\nCommentaire : Setosa a des petales courts quelle que soit la longueur du sepale.")
-print("Versicolor et Virginica montrent une correlation plus marquee.")
-
-# ====================================================================
-# EXERCICE 4 : BOITES A MOUSTACHES (BOXPLOT)
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[EXERCICE 4 : Boites a moustaches - Variables quantitatives vs Espece]")
-print("=" * 60)
-
-# Creer une figure avec 4 boxplots
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle('Boxplots : Variables quantitatives par espece', fontsize=16, fontweight='bold', color='#8B4789')
-fig.patch.set_facecolor('#FFF5FA')
-
-variables = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
-titres = ['Longueur du Sepale', 'Largeur du Sepale', 'Longueur du Petale', 'Largeur du Petale']
-
-for idx, (var, titre) in enumerate(zip(variables, titres)):
-    row = idx // 2
-    col = idx % 2
-    
-    # Creer le boxplot
-    sns.boxplot(x='species', y=var, data=df, ax=axes[row, col], palette=PALETTE_ROSE_VIOLET)
-    axes[row, col].set_title(f'{titre} par espece', fontsize=12, fontweight='bold', color='#8B4789')
-    axes[row, col].set_xlabel('Espece', fontsize=10, color='#8B4789')
-    axes[row, col].set_ylabel(f'{titre} (cm)', fontsize=10, color='#8B4789')
-    axes[row, col].grid(axis='y', alpha=0.3, color='#D4A5D4')
-    axes[row, col].set_facecolor('#FFF5FA')
-
-plt.tight_layout()
-plt.savefig('exercice4_boxplots.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : exercice4_boxplots.png")
-
-# Commentaires detailles
-print("\n--- ANALYSE DES BOXPLOTS ---")
-print("\n1. Longueur du petale par espece :")
-print("   - Setosa : petales tres courts (1-2 cm)")
-print("   - Versicolor : petales moyens (3-5 cm)")
-print("   - Virginica : petales longs (4.5-7 cm)")
-print("   => Cette variable discrimine tres bien les 3 especes")
-
-print("\n2. Largeur du sepale par espece :")
-print("   - Setosa : plus large")
-print("   - Versicolor et Virginica : plus etroites et similaires")
-print("   => Moins discriminante pour versicolor et virginica")
-
-# ====================================================================
-# EXERCICE 5 : CORRELATIONS ET VISUALISATIONS AVANCEES
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[EXERCICE 5 : Correlations et visualisations avancees]")
-print("=" * 60)
-
-# 1. Matrice de correlation
-print("\n1. Matrice de correlation entre variables quantitatives :")
-correlation_matrix = df[variables].corr()
-print(correlation_matrix)
-
-# Visualisation de la matrice de correlation
-fig = plt.figure(figsize=(10, 8))
-fig.patch.set_facecolor('#FFF5FA')
-ax = fig.add_subplot(111)
-sns.heatmap(correlation_matrix, annot=True, cmap='PuRd', center=0,
-            square=True, linewidths=1, cbar_kws={"shrink": 0.8}, ax=ax)
-ax.set_title('Matrice de correlation des variables', fontsize=14, fontweight='bold', color='#8B4789')
-plt.tight_layout()
-plt.savefig('exercice5_correlation_matrix.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : exercice5_correlation_matrix.png")
-
-# 2. Pairplot - Toutes les combinaisons de variables
-print("\n2. Pairplot - Vue d'ensemble de toutes les relations...")
-pairplot_fig = sns.pairplot(df, hue='species', palette=colors, diag_kind='hist', 
-                             plot_kws={'alpha': 0.7, 'edgecolor': '#8B4789', 's': 40}, 
-                             height=2.5)
-pairplot_fig.fig.suptitle('Pairplot : Toutes les relations entre variables', 
-                          y=1.02, fontsize=16, fontweight='bold', color='#8B4789')
-pairplot_fig.fig.patch.set_facecolor('#FFF5FA')
-plt.savefig('exercice5_pairplot.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : exercice5_pairplot.png")
-
-# 3. Violinplot - Distribution detaillee
-print("\n3. Violinplot pour une visualisation detaillee des distributions...")
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle('Violinplots : Distribution detaillee par espece', fontsize=16, fontweight='bold', color='#8B4789')
-fig.patch.set_facecolor('#FFF5FA')
-
-for idx, (var, titre) in enumerate(zip(variables, titres)):
-    row = idx // 2
-    col = idx % 2
-    
-    sns.violinplot(x='species', y=var, data=df, ax=axes[row, col], palette=PALETTE_ROSE_VIOLET)
-    axes[row, col].set_title(f'{titre} par espece', fontsize=12, fontweight='bold', color='#8B4789')
-    axes[row, col].set_xlabel('Espece', fontsize=10, color='#8B4789')
-    axes[row, col].set_ylabel(f'{titre} (cm)', fontsize=10, color='#8B4789')
-    axes[row, col].set_facecolor('#FFF5FA')
-
-plt.tight_layout()
-plt.savefig('exercice5_violinplots.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : exercice5_violinplots.png")
-
-# Resume des correlations
-print("\n--- ANALYSE DES CORRELATIONS ---")
-print("\nCorrelations fortes (> 0.8) :")
-for i in range(len(correlation_matrix.columns)):
-    for j in range(i+1, len(correlation_matrix.columns)):
-        if abs(correlation_matrix.iloc[i, j]) > 0.8:
-            print(f"  - {correlation_matrix.columns[i]} <-> {correlation_matrix.columns[j]}: {correlation_matrix.iloc[i, j]:.3f}")
-
-print("\nConclusion : Les dimensions des petales sont fortement correlees entre elles,")
-print("ainsi qu'avec la longueur du sepale. Ces variables sont donc tres informatives")
-print("pour la classification des especes d'iris.")
-
-print("\n" + "=" * 60)
-print("[FIN DE LA PARTIE VISUALISATION]")
-print("Tous les graphiques ont ete sauvegardes avec le theme rose-violet !")
-print("=" * 60)
-
-# ====================================================================
-# ETAPE 3 : PREPARATION DES DONNEES POUR LE MODELE
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[ETAPE 3 : Preparation des donnees pour le Machine Learning]")
-print("=" * 60)
-
-# Importer la fonction de separation des donnees
-from sklearn.model_selection import train_test_split
-
-# Etape 3.1 : Separer les caracteristiques (X) et la cible (y)
-print("\n--- Etape 3.1 : Separation caracteristiques / cible ---")
-
-# X contient toutes les colonnes SAUF 'species'
-X = df.drop('species', axis=1)
-print("\nCaracteristiques (X) :")
-print(f"  - Forme : {X.shape} (150 lignes x 4 colonnes)")
-print(f"  - Colonnes : {list(X.columns)}")
-print("\nApercu de X :")
-print(X.head())
-
-# y contient UNIQUEMENT la colonne 'species'
-y = df['species']
-print("\n\nCible (y) :")
-print(f"  - Forme : {y.shape} (150 lignes)")
-print(f"  - Valeurs uniques : {y.unique()}")
-print("\nApercu de y :")
-print(y.head())
-
-# Visualisation de la separation
-print("\n\nVisualisation de la structure des donnees...")
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Structure des donnees : X (caracteristiques) et y (cible)', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Heatmap des caracteristiques (5 premieres lignes)
-sns.heatmap(X.head(10), annot=True, fmt='.1f', cmap='PuRd', 
-            cbar_kws={'label': 'Valeur (cm)'}, ax=axes[0])
-axes[0].set_title('X : Caracteristiques (10 premieres lignes)', 
-                  fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].set_ylabel('Numero de ligne', color='#8B4789')
-
-# Graphique 2 : Distribution de la cible
-y_counts = y.value_counts()
-axes[1].bar(y_counts.index, y_counts.values, color=PALETTE_ROSE_VIOLET, 
-           edgecolor='#8B4789', linewidth=2)
-axes[1].set_title('y : Distribution de la cible', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].set_xlabel('Espece', color='#8B4789')
-axes[1].set_ylabel('Nombre d\'echantillons', color='#8B4789')
-axes[1].set_facecolor('#FFF5FA')
-for i, v in enumerate(y_counts.values):
-    axes[1].text(i, v + 1, str(v), ha='center', fontweight='bold', color='#8B4789')
-
-plt.tight_layout()
-plt.savefig('etape3_separation_donnees.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("OK - Graphique sauvegarde : etape3_separation_donnees.png")
-
-# ====================================================================
-# Etape 3.2 : Division en ensemble d'entrainement et de test
-# ====================================================================
-
-print("\n--- Etape 3.2 : Division Train/Test (80% / 20%) ---")
-
-# Diviser les donnees : 80% pour l'entrainement, 20% pour le test
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, 
-    test_size=0.2,      # 20% pour le test
-    random_state=42,    # Pour avoir toujours les memes resultats
-    stratify=y          # Garder la meme proportion d'especes dans train et test
-)
-
-print("\nResultat de la division :")
-print(f"  - Ensemble d'ENTRAINEMENT : {X_train.shape[0]} echantillons (80%)")
-print(f"  - Ensemble de TEST        : {X_test.shape[0]} echantillons (20%)")
-print(f"  - Total                    : {X_train.shape[0] + X_test.shape[0]} echantillons")
-
-# Verifier la repartition des especes
-print("\nRepartition des especes dans l'ensemble d'ENTRAINEMENT :")
-print(y_train.value_counts().sort_index())
-
-print("\nRepartition des especes dans l'ensemble de TEST :")
-print(y_test.value_counts().sort_index())
-
-# Visualisation de la division
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Division des donnees : Entrainement (80%) vs Test (20%)', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Taille des ensembles
-sizes = [X_train.shape[0], X_test.shape[0]]
-labels = [f'Entrainement\n({X_train.shape[0]} echantillons)', 
-          f'Test\n({X_test.shape[0]} echantillons)']
-colors_pie = ['#E6B3FF', '#FFB3D9']
-axes[0].pie(sizes, labels=labels, autopct='%1.0f%%', startangle=90, 
-           colors=colors_pie, textprops={'fontsize': 11, 'color': '#8B4789'})
-axes[0].set_title('Proportion Train/Test', fontsize=12, fontweight='bold', color='#8B4789')
-
-# Graphique 2 : Repartition des especes
-x_pos = np.arange(len(y_train.value_counts()))
-width = 0.35
-train_counts = y_train.value_counts().sort_index()
-test_counts = y_test.value_counts().sort_index()
-
-bars1 = axes[1].bar(x_pos - width/2, train_counts, width, 
-                   label='Entrainement', color='#E6B3FF', edgecolor='#8B4789', linewidth=1.5)
-bars2 = axes[1].bar(x_pos + width/2, test_counts, width, 
-                   label='Test', color='#FFB3D9', edgecolor='#8B4789', linewidth=1.5)
-
-axes[1].set_xlabel('Espece', fontsize=11, color='#8B4789')
-axes[1].set_ylabel('Nombre d\'echantillons', fontsize=11, color='#8B4789')
-axes[1].set_title('Repartition par espece', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].set_xticks(x_pos)
-axes[1].set_xticklabels(train_counts.index)
-axes[1].legend()
-axes[1].set_facecolor('#FFF5FA')
-axes[1].grid(axis='y', alpha=0.3, color='#D4A5D4')
-
-# Ajouter les valeurs sur les barres
-for bars in [bars1, bars2]:
-    for bar in bars:
-        height = bar.get_height()
-        axes[1].text(bar.get_x() + bar.get_width()/2., height,
-                    f'{int(height)}', ha='center', va='bottom', 
-                    fontweight='bold', color='#8B4789', fontsize=9)
-
-plt.tight_layout()
-plt.savefig('etape3_division_train_test.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape3_division_train_test.png")
-
-print("\n💡 Point important :")
-print("   Le parametre 'stratify=y' garantit que chaque espece est")
-print("   representee proportionnellement dans train et test.")
-
-# ====================================================================
-# Etape 3.3 : Normalisation des caracteristiques
-# ====================================================================
-
-print("\n--- Etape 3.3 : Normalisation des donnees ---")
-
-# Importer le normaliseur
-from sklearn.preprocessing import StandardScaler
-
-# Regardons les donnees AVANT normalisation
-print("\nDonnees AVANT normalisation (5 premieres lignes de X_train) :")
-print(X_train.head())
-print("\nStatistiques AVANT normalisation :")
-stats_avant = X_train.describe().T[['mean', 'std']].round(2)
-print(stats_avant)
-
-# Creer le normaliseur
-scaler = StandardScaler()
-
-# Entrainer le normaliseur sur les donnees d'entrainement et transformer
-X_train_scaled = scaler.fit_transform(X_train)
-
-# Transformer les donnees de test (SANS fit !)
-X_test_scaled = scaler.transform(X_test)
-
-# Convertir en DataFrame pour mieux visualiser
-X_train_scaled_df = pd.DataFrame(X_train_scaled, columns=X.columns)
-X_test_scaled_df = pd.DataFrame(X_test_scaled, columns=X.columns)
-
-print("\n\nDonnees APRES normalisation (5 premieres lignes) :")
-print(X_train_scaled_df.head())
-print("\nStatistiques APRES normalisation :")
-stats_apres = X_train_scaled_df.describe().T[['mean', 'std']].round(2)
-print(stats_apres)
-
-# Visualisation : Avant vs Apres normalisation
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Effet de la normalisation sur les donnees', 
-             fontsize=16, fontweight='bold', color='#8B4789')
-
-variables = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
-titres = ['Longueur Sepale', 'Largeur Sepale', 'Longueur Petale', 'Largeur Petale']
-
-for idx, (var, titre) in enumerate(zip(variables, titres)):
-    row = idx // 2
-    col = idx % 2
-    
-    # Donnees avant et apres
-    avant = X_train[var]
-    apres = X_train_scaled_df[var]
-    
-    # Position des boites
-    positions = [1, 2]
-    data_to_plot = [avant, apres]
-    
-    bp = axes[row, col].boxplot(data_to_plot, positions=positions, widths=0.5,
-                                patch_artist=True, 
-                                boxprops=dict(facecolor='#E6B3FF', edgecolor='#8B4789', linewidth=1.5),
-                                medianprops=dict(color='#C71585', linewidth=2),
-                                whiskerprops=dict(color='#8B4789', linewidth=1.5),
-                                capprops=dict(color='#8B4789', linewidth=1.5))
-    
-    axes[row, col].set_title(titre, fontsize=12, fontweight='bold', color='#8B4789')
-    axes[row, col].set_xticklabels(['Avant', 'Apres'], color='#8B4789')
-    axes[row, col].set_ylabel('Valeur', fontsize=10, color='#8B4789')
-    axes[row, col].grid(axis='y', alpha=0.3, color='#D4A5D4')
-    axes[row, col].set_facecolor('#FFF5FA')
-    
-    # Ajouter les moyennes
-    axes[row, col].axhline(y=0, color='#C71585', linestyle='--', linewidth=1, alpha=0.5)
-
-plt.tight_layout()
-plt.savefig('etape3_normalisation.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape3_normalisation.png")
-
-print("\n💡 Ce qu'il faut retenir :")
-print("   - Avant : les valeurs sont differentes (0-8 cm)")
-print("   - Apres : moyenne = 0, ecart-type = 1 pour toutes les variables")
-print("   - Cela permet au modele de traiter toutes les variables equitablement")
-
-# ====================================================================
-# ETAPE 4 : CREATION ET ENTRAINEMENT DU MODELE KNN
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[ETAPE 4 : Creation et entrainement du modele KNN]")
-print("=" * 60)
-
-# Importer le modele KNN
-from sklearn.neighbors import KNeighborsClassifier
-
-print("\n--- Qu'est-ce que le modele KNN ? ---")
-print("KNN = K-Nearest Neighbors (K plus proches voisins)")
-print("Principe : Pour classifier une nouvelle fleur, on regarde les K fleurs")
-print("           les plus proches et on vote pour l'espece majoritaire.")
-print("\nExemple : Si K=3 et que les 3 voisins les plus proches sont des setosa,")
-print("          alors la nouvelle fleur sera classee comme setosa.")
-
-# Etape 4.1 : Creer le modele avec K=3
-print("\n--- Etape 4.1 : Creation du modele ---")
-print("Parametres choisis : n_neighbors = 3 (on regarde les 3 voisins les plus proches)")
-
-knn = KNeighborsClassifier(n_neighbors=3)
-print("\nModele KNN cree avec succes !")
-print(f"Type du modele : {type(knn)}")
-
-# Etape 4.2 : Entrainer le modele
-print("\n--- Etape 4.2 : Entrainement du modele ---")
-print("Le modele va apprendre sur les 120 echantillons d'entrainement...")
-
-# Entrainer le modele
-knn.fit(X_train_scaled, y_train)
-
-print("\nEntrainement termine avec succes !")
-print(f"Le modele a appris sur {X_train_scaled.shape[0]} echantillons")
-print(f"Nombre de caracteristiques utilisees : {X_train_scaled.shape[1]}")
-print(f"Nombre de classes (especes) : {len(knn.classes_)}")
-print(f"Classes reconnues : {list(knn.classes_)}")
-
-# Etape 4.3 : Faire des predictions
-print("\n--- Etape 4.3 : Predictions sur l'ensemble de test ---")
-print("Le modele va maintenant predire l'espece des 30 fleurs de test...")
-
-# Predire les especes
-y_pred = knn.predict(X_test_scaled)
-
-print("\nPredictions terminees !")
-print(f"Nombre de predictions : {len(y_pred)}")
-
-# Comparer les predictions avec les vraies valeurs
-print("\nComparaison des 10 premieres predictions :")
-print("-" * 60)
-comparison_df = pd.DataFrame({
-    'Vraie espece': y_test.values[:10],
-    'Prediction': y_pred[:10],
-    'Correct?': ['✓' if y_test.values[i] == y_pred[i] else '✗' for i in range(10)]
-})
-print(comparison_df.to_string(index=False))
-
-# Visualisation des predictions
-print("\nVisualisation des predictions...")
-
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Predictions du modele KNN sur l\'ensemble de test', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Comparaison des vraies valeurs vs predictions
-species_order = ['setosa', 'versicolor', 'virginica']
-y_test_counts = pd.Series(y_test).value_counts()[species_order]
-y_pred_counts = pd.Series(y_pred).value_counts().reindex(species_order, fill_value=0)
-
-x_pos = np.arange(len(species_order))
-width = 0.35
-
-bars1 = axes[0].bar(x_pos - width/2, y_test_counts, width, 
-                   label='Vraies valeurs', color='#E6B3FF', 
-                   edgecolor='#8B4789', linewidth=1.5)
-bars2 = axes[0].bar(x_pos + width/2, y_pred_counts, width, 
-                   label='Predictions', color='#FFB3D9', 
-                   edgecolor='#8B4789', linewidth=1.5)
-
-axes[0].set_xlabel('Espece', fontsize=11, color='#8B4789')
-axes[0].set_ylabel('Nombre', fontsize=11, color='#8B4789')
-axes[0].set_title('Vraies valeurs vs Predictions', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].set_xticks(x_pos)
-axes[0].set_xticklabels(species_order)
-axes[0].legend()
-axes[0].set_facecolor('#FFF5FA')
-axes[0].grid(axis='y', alpha=0.3, color='#D4A5D4')
-
-for bars in [bars1, bars2]:
-    for bar in bars:
-        height = bar.get_height()
-        axes[0].text(bar.get_x() + bar.get_width()/2., height,
-                    f'{int(height)}', ha='center', va='bottom', 
-                    fontweight='bold', color='#8B4789', fontsize=9)
-
-# Graphique 2 : Predictions correctes vs incorrectes
-correct = sum(y_test.values == y_pred)
-incorrect = len(y_pred) - correct
-sizes = [correct, incorrect]
-labels = [f'Correctes\n({correct})', f'Incorrectes\n({incorrect})']
-colors_pie = ['#E6B3FF', '#FFB3D9']
-
-axes[1].pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90,
-           colors=colors_pie, textprops={'fontsize': 11, 'color': '#8B4789'})
-axes[1].set_title('Taux de reussite', fontsize=12, fontweight='bold', color='#8B4789')
-
-plt.tight_layout()
-plt.savefig('etape4_predictions.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape4_predictions.png")
-print(f"\nPremier apercu des performances : {correct}/{len(y_pred)} predictions correctes ({100*correct/len(y_pred):.1f}%)")
-
-# ====================================================================
-# ETAPE 5 : EVALUATION DETAILLEE DU MODELE
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[ETAPE 5 : Evaluation detaillee du modele]")
-print("=" * 60)
-
-# Importer les metriques d'evaluation
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
-
-# Etape 5.1 : Exactitude (Accuracy)
-print("\n--- Etape 5.1 : Exactitude globale ---")
-
-accuracy = accuracy_score(y_test, y_pred)
-print(f"\nExactitude (Accuracy) : {accuracy * 100:.2f}%")
-print(f"Cela signifie que le modele a correctement predit {accuracy * 100:.2f}% des fleurs.")
-
-# Etape 5.2 : Matrice de confusion
-print("\n--- Etape 5.2 : Matrice de confusion ---")
-print("\nLa matrice de confusion montre :")
-print("  - En LIGNES : les vraies especes")
-print("  - En COLONNES : les predictions du modele")
-print("  - DIAGONALE : predictions correctes")
-print("  - HORS DIAGONALE : erreurs")
-
-conf_matrix = confusion_matrix(y_test, y_pred, labels=species_order)
-print("\nMatrice de confusion :")
-print(conf_matrix)
-
-# Visualisation de la matrice de confusion
-fig = plt.figure(figsize=(10, 8))
-fig.patch.set_facecolor('#FFF5FA')
-ax = fig.add_subplot(111)
-
-# Creer la heatmap
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='PuRd', 
-            xticklabels=species_order, yticklabels=species_order,
-            cbar_kws={'label': 'Nombre de predictions'},
-            linewidths=2, linecolor='#8B4789', ax=ax)
-
-ax.set_title('Matrice de confusion du modele KNN', 
-            fontsize=14, fontweight='bold', color='#8B4789', pad=20)
-ax.set_xlabel('Predictions', fontsize=12, color='#8B4789', fontweight='bold')
-ax.set_ylabel('Vraies especes', fontsize=12, color='#8B4789', fontweight='bold')
-
-# Colorer les axes
-ax.tick_params(colors='#8B4789')
-
-plt.tight_layout()
-plt.savefig('etape5_matrice_confusion.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape5_matrice_confusion.png")
-
-# Analyser la matrice
-print("\n--- Analyse de la matrice de confusion ---")
-for i, species in enumerate(species_order):
-    correct_predictions = conf_matrix[i, i]
-    total_species = conf_matrix[i, :].sum()
-    print(f"  {species.capitalize()} : {correct_predictions}/{total_species} correctes")
-    
-    # Identifier les erreurs
-    errors = []
-    for j, other_species in enumerate(species_order):
-        if i != j and conf_matrix[i, j] > 0:
-            errors.append(f"{conf_matrix[i, j]} confondues avec {other_species}")
-    if errors:
-        print(f"    Erreurs : {', '.join(errors)}")
-    else:
-        print(f"    Aucune erreur !")
-
-# Etape 5.3 : Rapport de classification
-print("\n--- Etape 5.3 : Rapport de classification detaille ---")
-print("\nLe rapport contient pour chaque espece :")
-print("  - Precision : % de predictions correctes parmi celles faites")
-print("  - Recall (Rappel) : % de vraies especes correctement trouvees")
-print("  - F1-score : moyenne harmonique de precision et recall")
-print("  - Support : nombre d'echantillons reels de cette espece")
-
-print("\nRapport de classification :")
-print(classification_report(y_test, y_pred, target_names=species_order))
-
-# Visualisation du rapport de classification
-from sklearn.metrics import precision_recall_fscore_support
-
-precision, recall, f1, support = precision_recall_fscore_support(y_test, y_pred, labels=species_order)
-
-# Creer un graphique comparatif
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Metriques de performance par espece', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Precision, Recall, F1-score
-x_pos = np.arange(len(species_order))
-width = 0.25
-
-bars1 = axes[0].bar(x_pos - width, precision, width, 
-                   label='Precision', color='#FFB3D9', 
-                   edgecolor='#8B4789', linewidth=1.5)
-bars2 = axes[0].bar(x_pos, recall, width, 
-                   label='Recall', color='#E6B3FF', 
-                   edgecolor='#8B4789', linewidth=1.5)
-bars3 = axes[0].bar(x_pos + width, f1, width, 
-                   label='F1-score', color='#D4A5D4', 
-                   edgecolor='#8B4789', linewidth=1.5)
-
-axes[0].set_xlabel('Espece', fontsize=11, color='#8B4789')
-axes[0].set_ylabel('Score', fontsize=11, color='#8B4789')
-axes[0].set_title('Precision, Recall et F1-score', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].set_xticks(x_pos)
-axes[0].set_xticklabels(species_order)
-axes[0].legend()
-axes[0].set_ylim([0, 1.1])
-axes[0].set_facecolor('#FFF5FA')
-axes[0].grid(axis='y', alpha=0.3, color='#D4A5D4')
-
-# Ajouter les valeurs sur les barres
-for bars in [bars1, bars2, bars3]:
-    for bar in bars:
-        height = bar.get_height()
-        axes[0].text(bar.get_x() + bar.get_width()/2., height,
-                    f'{height:.2f}', ha='center', va='bottom', 
-                    fontweight='bold', color='#8B4789', fontsize=8)
-
-# Graphique 2 : Support (nombre d'echantillons)
-bars = axes[1].bar(species_order, support, color=PALETTE_ROSE_VIOLET, 
-                   edgecolor='#8B4789', linewidth=1.5)
-axes[1].set_xlabel('Espece', fontsize=11, color='#8B4789')
-axes[1].set_ylabel('Nombre d\'echantillons', fontsize=11, color='#8B4789')
-axes[1].set_title('Support (echantillons de test)', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].set_facecolor('#FFF5FA')
-axes[1].grid(axis='y', alpha=0.3, color='#D4A5D4')
-
-for bar in bars:
-    height = bar.get_height()
-    axes[1].text(bar.get_x() + bar.get_width()/2., height,
-                f'{int(height)}', ha='center', va='bottom', 
-                fontweight='bold', color='#8B4789', fontsize=10)
-
-plt.tight_layout()
-plt.savefig('etape5_metriques_performance.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape5_metriques_performance.png")
-
-# Resume final
-print("\n" + "=" * 60)
-print("RESUME DE L'EVALUATION")
-print("=" * 60)
-print(f"\n✓ Exactitude globale : {accuracy * 100:.2f}%")
-print(f"✓ Nombre total de predictions : {len(y_pred)}")
-print(f"✓ Predictions correctes : {sum(y_test.values == y_pred)}")
-print(f"✓ Predictions incorrectes : {sum(y_test.values != y_pred)}")
-print("\nConclusion : Le modele KNN performe tres bien sur ce dataset !")
-print("Les erreurs sont minimes et principalement entre versicolor et virginica.")
-
-# ====================================================================
-# ETAPE 6 : OPTIMISATION DU MODELE - RECHERCHE DU MEILLEUR K
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[ETAPE 6 : Optimisation du modele - Recherche du meilleur K]")
-print("=" * 60)
-
-print("\n--- Pourquoi optimiser K ? ---")
-print("K = nombre de voisins a considerer pour la prediction")
-print("  - K trop petit (ex: K=1) : sensible au bruit, risque de surajustement")
-print("  - K trop grand (ex: K=50) : perd en precision, sous-ajustement")
-print("  - Il faut trouver le K optimal !")
-
-# Etape 6.1 : Tester differentes valeurs de K
-print("\n--- Etape 6.1 : Test de differentes valeurs de K ---")
-print("Nous allons tester K de 1 a 30...")
-
-# Liste des valeurs de K a tester
-k_values = range(1, 31)
-train_scores = []
-test_scores = []
-
-# Tester chaque valeur de K
-for k in k_values:
-    # Creer et entrainer le modele
-    knn_temp = KNeighborsClassifier(n_neighbors=k)
-    knn_temp.fit(X_train_scaled, y_train)
-    
-    # Calculer les scores
-    train_score = knn_temp.score(X_train_scaled, y_train)
-    test_score = knn_temp.score(X_test_scaled, y_test)
-    
-    train_scores.append(train_score)
-    test_scores.append(test_score)
-
-# Trouver le meilleur K
-best_k = list(k_values)[test_scores.index(max(test_scores))]
-best_score = max(test_scores)
-
-print(f"\nTest termine !")
-print(f"Meilleur K trouve : {best_k}")
-print(f"Meilleure exactitude sur test : {best_score * 100:.2f}%")
-
-# Visualisation de l'evolution des scores
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Optimisation du parametre K', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Evolution des scores
-axes[0].plot(k_values, train_scores, marker='o', linewidth=2, 
-            color='#E6B3FF', label='Score entrainement', markersize=6)
-axes[0].plot(k_values, test_scores, marker='s', linewidth=2, 
-            color='#FFB3D9', label='Score test', markersize=6)
-axes[0].axvline(x=best_k, color='#C71585', linestyle='--', linewidth=2, 
-               label=f'Meilleur K = {best_k}')
-axes[0].set_xlabel('Nombre de voisins (K)', fontsize=11, color='#8B4789')
-axes[0].set_ylabel('Exactitude', fontsize=11, color='#8B4789')
-axes[0].set_title('Evolution de l\'exactitude selon K', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].legend()
-axes[0].grid(True, alpha=0.3, color='#D4A5D4')
-axes[0].set_facecolor('#FFF5FA')
-axes[0].set_ylim([0.85, 1.02])
-
-# Graphique 2 : Top 5 des meilleurs K
-# Trouver les 5 meilleurs K
-k_scores = list(zip(k_values, test_scores))
-k_scores_sorted = sorted(k_scores, key=lambda x: x[1], reverse=True)[:5]
-top_k = [x[0] for x in k_scores_sorted]
-top_scores = [x[1] for x in k_scores_sorted]
-
-bars = axes[1].bar(range(len(top_k)), top_scores, 
-                  color=PALETTE_ROSE_VIOLET[:5], 
-                  edgecolor='#8B4789', linewidth=1.5)
-axes[1].set_xlabel('Rang', fontsize=11, color='#8B4789')
-axes[1].set_ylabel('Exactitude', fontsize=11, color='#8B4789')
-axes[1].set_title('Top 5 des meilleurs K', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].set_xticks(range(len(top_k)))
-axes[1].set_xticklabels([f'{i+1}' for i in range(len(top_k))])
-axes[1].set_facecolor('#FFF5FA')
-axes[1].grid(axis='y', alpha=0.3, color='#D4A5D4')
-axes[1].set_ylim([0.85, 1.02])
-
-# Ajouter les valeurs K et scores sur les barres
-for i, (bar, k, score) in enumerate(zip(bars, top_k, top_scores)):
-    height = bar.get_height()
-    axes[1].text(bar.get_x() + bar.get_width()/2., height,
-                f'K={k}\n{score*100:.1f}%', ha='center', va='bottom', 
-                fontweight='bold', color='#8B4789', fontsize=9)
-
-plt.tight_layout()
-plt.savefig('etape6_optimisation_k.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape6_optimisation_k.png")
-
-# Afficher le tableau des 5 meilleurs K
-print("\n--- Top 5 des meilleurs K ---")
-print("-" * 40)
-print(f"{'Rang':<6} {'K':<6} {'Exactitude':<12}")
-print("-" * 40)
-for i, (k, score) in enumerate(k_scores_sorted[:5], 1):
-    print(f"{i:<6} {k:<6} {score*100:.2f}%")
-print("-" * 40)
-
-# Etape 6.2 : Entrainer le modele final avec le meilleur K
-print("\n--- Etape 6.2 : Entrainement du modele final optimise ---")
-print(f"Nous allons maintenant creer un nouveau modele avec K = {best_k}")
-
-# Creer le modele optimise
-knn_optimized = KNeighborsClassifier(n_neighbors=best_k)
-knn_optimized.fit(X_train_scaled, y_train)
-
-# Predictions avec le modele optimise
-y_pred_optimized = knn_optimized.predict(X_test_scaled)
-
-# Evaluer le modele optimise
-accuracy_optimized = accuracy_score(y_test, y_pred_optimized)
-conf_matrix_optimized = confusion_matrix(y_test, y_pred_optimized, labels=species_order)
-
-print(f"\nModele optimise entraine avec succes !")
-print(f"Exactitude du modele optimise : {accuracy_optimized * 100:.2f}%")
-
-# Comparaison avant/apres optimisation
-print("\n--- Comparaison des modeles ---")
-print(f"Modele initial (K=3)     : {accuracy * 100:.2f}%")
-print(f"Modele optimise (K={best_k})  : {accuracy_optimized * 100:.2f}%")
-if accuracy_optimized > accuracy:
-    improvement = (accuracy_optimized - accuracy) * 100
-    print(f"Amelioration             : +{improvement:.2f}%")
-elif accuracy_optimized < accuracy:
-    print(f"Performance similaire")
-else:
-    print(f"Performance identique")
-
-# Visualisation de la comparaison
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Comparaison : Modele initial vs Modele optimise', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Comparaison des exactitudes
-models = ['Initial\n(K=3)', f'Optimise\n(K={best_k})']
-accuracies = [accuracy, accuracy_optimized]
-bars = axes[0].bar(models, accuracies, color=['#E6B3FF', '#FFB3D9'], 
-                  edgecolor='#8B4789', linewidth=2)
-axes[0].set_ylabel('Exactitude', fontsize=11, color='#8B4789')
-axes[0].set_title('Exactitude des modeles', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].set_ylim([0.9, 1.02])
-axes[0].set_facecolor('#FFF5FA')
-axes[0].grid(axis='y', alpha=0.3, color='#D4A5D4')
-
-for bar in bars:
-    height = bar.get_height()
-    axes[0].text(bar.get_x() + bar.get_width()/2., height,
-                f'{height*100:.1f}%', ha='center', va='bottom', 
-                fontweight='bold', color='#8B4789', fontsize=11)
-
-# Graphique 2 : Matrice de confusion du modele optimise
-sns.heatmap(conf_matrix_optimized, annot=True, fmt='d', cmap='PuRd', 
-            xticklabels=species_order, yticklabels=species_order,
-            cbar_kws={'label': 'Nombre'},
-            linewidths=2, linecolor='#8B4789', ax=axes[1])
-axes[1].set_title(f'Matrice de confusion (K={best_k})', 
-                 fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].set_xlabel('Predictions', fontsize=11, color='#8B4789')
-axes[1].set_ylabel('Vraies especes', fontsize=11, color='#8B4789')
-
-plt.tight_layout()
-plt.savefig('etape6_comparaison_modeles.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape6_comparaison_modeles.png")
-
-# ====================================================================
-# ETAPE 7 : OPTIMISATION DU MODELE ET COMPARAISON
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[ETAPE 7 : Optimisation et comparaison de plusieurs modeles]")
-print("=" * 60)
-
-# Importer les modeles et outils necessaires
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
-from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import GridSearchCV, cross_val_score
-import time
-
-# ====================================================================
-# PARTIE 7.1 : OPTIMISATION DES HYPER-PARAMETRES DU KNN
-# ====================================================================
-
-print("\n--- Partie 7.1 : Optimisation des hyper-parametres du KNN ---")
-print("Nous allons tester differentes combinaisons de K et de distances...")
-
-# Definir la grille de parametres a tester
-param_grid_knn = {
-    'n_neighbors': [1, 3, 5, 7, 9, 11, 13, 15],
-    'metric': ['euclidean', 'manhattan', 'minkowski']
-}
-
-# Creer le modele de base
-knn_base = KNeighborsClassifier()
-
-# Recherche en grille avec validation croisee
-print("\nRecherche en grille en cours...")
-grid_search_knn = GridSearchCV(
-    knn_base, 
-    param_grid_knn, 
-    cv=5,  # Validation croisee a 5 plis
-    scoring='accuracy',
-    n_jobs=-1,
-    verbose=0
-)
-
-# Entrainer avec toutes les combinaisons
-start_time = time.time()
-grid_search_knn.fit(X_train_scaled, y_train)
-end_time = time.time()
-
-print(f"Recherche terminee en {end_time - start_time:.2f} secondes")
-print(f"\nMeilleurs parametres trouves : {grid_search_knn.best_params_}")
-print(f"Meilleur score (validation croisee) : {grid_search_knn.best_score_ * 100:.2f}%")
-
-# Predictions avec le meilleur modele KNN
-best_knn = grid_search_knn.best_estimator_
-y_pred_best_knn = best_knn.predict(X_test_scaled)
-accuracy_best_knn = accuracy_score(y_test, y_pred_best_knn)
-
-print(f"Exactitude sur l'ensemble de test : {accuracy_best_knn * 100:.2f}%")
-
-# Visualiser les resultats de la recherche en grille
-results_df = pd.DataFrame(grid_search_knn.cv_results_)
-
-fig, axes = plt.subplots(1, 2, figsize=(16, 6))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Optimisation des hyper-parametres du KNN', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Score selon K pour chaque metrique
-for metric in ['euclidean', 'manhattan', 'minkowski']:
-    mask = results_df['param_metric'] == metric
-    data = results_df[mask]
-    axes[0].plot(data['param_n_neighbors'], data['mean_test_score'], 
-                marker='o', label=metric, linewidth=2, markersize=8)
-
-axes[0].set_xlabel('Nombre de voisins (K)', fontsize=11, color='#8B4789')
-axes[0].set_ylabel('Score moyen (validation croisee)', fontsize=11, color='#8B4789')
-axes[0].set_title('Performance selon K et la distance', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].legend()
-axes[0].grid(True, alpha=0.3, color='#D4A5D4')
-axes[0].set_facecolor('#FFF5FA')
-
-# Graphique 2 : Heatmap des performances
-pivot_data = results_df.pivot_table(
-    values='mean_test_score', 
-    index='param_metric', 
-    columns='param_n_neighbors'
-)
-sns.heatmap(pivot_data, annot=True, fmt='.3f', cmap='PuRd', 
-            linewidths=1, linecolor='#8B4789', ax=axes[1], cbar_kws={'label': 'Score'})
-axes[1].set_title('Heatmap des performances', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].set_xlabel('Nombre de voisins (K)', fontsize=11, color='#8B4789')
-axes[1].set_ylabel('Metrique de distance', fontsize=11, color='#8B4789')
-
-plt.tight_layout()
-plt.savefig('etape7_optimisation_knn.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape7_optimisation_knn.png")
-
-# ====================================================================
-# PARTIE 7.2 : ENTRAINEMENT ET COMPARAISON DE PLUSIEURS MODELES
-# ====================================================================
-
-print("\n--- Partie 7.2 : Comparaison de differents modeles ---")
-print("Nous allons entrainer 6 modeles differents et comparer leurs performances...\n")
-
-# Dictionnaire des modeles a tester
-models = {
-    'KNN Optimise': best_knn,
-    'Regression Logistique': LogisticRegression(max_iter=200, random_state=42),
-    'Arbre de Decision': DecisionTreeClassifier(random_state=42),
-    'Naive Bayes': GaussianNB(),
-    'SVM': SVC(kernel='rbf', random_state=42),
-    'Reseau de Neurones': MLPClassifier(hidden_layer_sizes=(10, 10), max_iter=1000, random_state=42)
-}
-
-# Stocker les resultats
-results = {
-    'Modele': [],
-    'Exactitude Train': [],
-    'Exactitude Test': [],
-    'Score CV': [],
-    'Temps (s)': []
-}
-
-# Entrainer et evaluer chaque modele
-print("Entrainement des modeles en cours...\n")
-print("-" * 70)
-print(f"{'Modele':<25} {'Train':<12} {'Test':<12} {'CV Score':<12} {'Temps':<10}")
-print("-" * 70)
-
-for name, model in models.items():
-    # Mesurer le temps
-    start_time = time.time()
-    
-    # Entrainer le modele (sauf KNN deja entraine)
-    if name != 'KNN Optimise':
-        model.fit(X_train_scaled, y_train)
-    
-    # Predictions
-    y_pred_train = model.predict(X_train_scaled)
-    y_pred_test = model.predict(X_test_scaled)
-    
-    # Scores
-    train_acc = accuracy_score(y_train, y_pred_train)
-    test_acc = accuracy_score(y_test, y_pred_test)
-    
-    # Validation croisee
-    cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5)
-    cv_mean = cv_scores.mean()
-    
-    # Temps
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    
-    # Stocker les resultats
-    results['Modele'].append(name)
-    results['Exactitude Train'].append(train_acc)
-    results['Exactitude Test'].append(test_acc)
-    results['Score CV'].append(cv_mean)
-    results['Temps (s)'].append(elapsed_time)
-    
-    # Afficher
-    print(f"{name:<25} {train_acc*100:>6.2f}%     {test_acc*100:>6.2f}%     {cv_mean*100:>6.2f}%     {elapsed_time:>6.3f}s")
-
-print("-" * 70)
-print("\nEntrainement termine !\n")
-
-# Creer un DataFrame des resultats
-results_df = pd.DataFrame(results)
-print("Tableau recapitulatif des performances :")
-print(results_df.to_string(index=False))
-
-# Identifier le meilleur modele
-best_model_idx = results_df['Exactitude Test'].idxmax()
-best_model_name = results_df.loc[best_model_idx, 'Modele']
-best_model_score = results_df.loc[best_model_idx, 'Exactitude Test']
-
-print(f"\n🏆 Meilleur modele : {best_model_name} avec {best_model_score*100:.2f}% d'exactitude")
-
-# ====================================================================
-# VISUALISATION COMPARATIVE DES MODELES
-# ====================================================================
-
-print("\nCreation des graphiques comparatifs...")
-
-fig = plt.figure(figsize=(16, 10))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle('Comparaison des performances des modeles', 
-             fontsize=16, fontweight='bold', color='#8B4789')
-
-# Graphique 1 : Exactitude Train vs Test
-ax1 = plt.subplot(2, 2, 1)
-x_pos = np.arange(len(results_df))
-width = 0.35
-
-bars1 = ax1.bar(x_pos - width/2, results_df['Exactitude Train'], width,
-               label='Train', color='#E6B3FF', edgecolor='#8B4789', linewidth=1.5)
-bars2 = ax1.bar(x_pos + width/2, results_df['Exactitude Test'], width,
-               label='Test', color='#FFB3D9', edgecolor='#8B4789', linewidth=1.5)
-
-ax1.set_xlabel('Modele', fontsize=10, color='#8B4789')
-ax1.set_ylabel('Exactitude', fontsize=10, color='#8B4789')
-ax1.set_title('Exactitude Train vs Test', fontsize=12, fontweight='bold', color='#8B4789')
-ax1.set_xticks(x_pos)
-ax1.set_xticklabels(results_df['Modele'], rotation=45, ha='right', fontsize=9)
-ax1.legend()
-ax1.set_facecolor('#FFF5FA')
-ax1.grid(axis='y', alpha=0.3, color='#D4A5D4')
-ax1.set_ylim([0.8, 1.05])
-
-# Ajouter les valeurs
-for bars in [bars1, bars2]:
-    for bar in bars:
-        height = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height*100:.1f}%', ha='center', va='bottom', 
-                fontweight='bold', color='#8B4789', fontsize=7)
-
-# Graphique 2 : Score de validation croisee
-ax2 = plt.subplot(2, 2, 2)
-bars = ax2.barh(results_df['Modele'], results_df['Score CV'], 
-               color=PALETTE_ROSE_VIOLET, edgecolor='#8B4789', linewidth=1.5)
-ax2.set_xlabel('Score CV (moyenne)', fontsize=10, color='#8B4789')
-ax2.set_title('Score de validation croisee', fontsize=12, fontweight='bold', color='#8B4789')
-ax2.set_facecolor('#FFF5FA')
-ax2.grid(axis='x', alpha=0.3, color='#D4A5D4')
-ax2.set_xlim([0.8, 1.05])
-
-for i, bar in enumerate(bars):
-    width = bar.get_width()
-    ax2.text(width, bar.get_y() + bar.get_height()/2.,
-            f'{width*100:.2f}%', ha='left', va='center', 
-            fontweight='bold', color='#8B4789', fontsize=9, 
-            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='#8B4789'))
-
-# Graphique 3 : Temps d'execution
-ax3 = plt.subplot(2, 2, 3)
-bars = ax3.bar(results_df['Modele'], results_df['Temps (s)'], 
-              color=PALETTE_ROSE_VIOLET, edgecolor='#8B4789', linewidth=1.5)
-ax3.set_xlabel('Modele', fontsize=10, color='#8B4789')
-ax3.set_ylabel('Temps (secondes)', fontsize=10, color='#8B4789')
-ax3.set_title('Temps d\'execution', fontsize=12, fontweight='bold', color='#8B4789')
-ax3.set_xticklabels(results_df['Modele'], rotation=45, ha='right', fontsize=9)
-ax3.set_facecolor('#FFF5FA')
-ax3.grid(axis='y', alpha=0.3, color='#D4A5D4')
-
-for bar in bars:
-    height = bar.get_height()
-    ax3.text(bar.get_x() + bar.get_width()/2., height,
-            f'{height:.3f}s', ha='center', va='bottom', 
-            fontweight='bold', color='#8B4789', fontsize=8)
-
-# Graphique 4 : Classement global
-ax4 = plt.subplot(2, 2, 4)
-# Creer un score composite (Test + CV) / 2
-results_df['Score Composite'] = (results_df['Exactitude Test'] + results_df['Score CV']) / 2
-results_sorted = results_df.sort_values('Score Composite', ascending=True)
-
-bars = ax4.barh(results_sorted['Modelez'], results_sorted['Score Composite'], 
-               color=PALETTE_ROSE_VIOLET, edgecolor='#8B4789', linewidth=1.5)
-ax4.set_xlabel('Score composite', fontsize=10, color='#8B4789')
-ax4.set_title('Classement global (Test + CV)/2', fontsize=12, fontweight='bold', color='#8B4789')
-ax4.set_facecolor('#FFF5FA')
-ax4.grid(axis='x', alpha=0.3, color='#D4A5D4')
-ax4.set_xlim([0.8, 1.05])
-
-# Mettre en evidence le meilleur
-for i, bar in enumerate(bars):
-    width = bar.get_width()
-    if results_sorted.iloc[i]['Modele'] == best_model_name:
-        bar.set_color('#C71585')
-        bar.set_linewidth(3)
-    ax4.text(width, bar.get_y() + bar.get_height()/2.,
-            f'{width*100:.2f}%', ha='left', va='center', 
-            fontweight='bold', color='#8B4789', fontsize=9,
-            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='#8B4789'))
-
-plt.tight_layout()
-plt.savefig('etape7_comparaison_modeles.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape7_comparaison_modeles.png")
-
-# ====================================================================
-# ANALYSE DETAILLEE DU MEILLEUR MODELE
-# ====================================================================
-
-print("\n--- Analyse detaillee du meilleur modele ---")
-print(f"Modele selectionne : {best_model_name}\n")
-
-# Recuperer le meilleur modele
-best_model = models[best_model_name]
-y_pred_best = best_model.predict(X_test_scaled)
-
-# Matrice de confusion
-conf_matrix_best = confusion_matrix(y_test, y_pred_best, labels=species_order)
-
-# Rapport de classification
-print("Rapport de classification du meilleur modele :")
-print(classification_report(y_test, y_pred_best, target_names=species_order))
-
-# Visualisation
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-fig.patch.set_facecolor('#FFF5FA')
-fig.suptitle(f'Analyse detaillee : {best_model_name}', 
-             fontsize=14, fontweight='bold', color='#8B4789')
-
-# Matrice de confusion
-sns.heatmap(conf_matrix_best, annot=True, fmt='d', cmap='PuRd', 
-            xticklabels=species_order, yticklabels=species_order,
-            cbar_kws={'label': 'Nombre'},
-            linewidths=2, linecolor='#8B4789', ax=axes[0])
-axes[0].set_title('Matrice de confusion', fontsize=12, fontweight='bold', color='#8B4789')
-axes[0].set_xlabel('Predictions', fontsize=11, color='#8B4789')
-axes[0].set_ylabel('Vraies especes', fontsize=11, color='#8B4789')
-
-# Metriques par classe
-precision, recall, f1, support = precision_recall_fscore_support(y_test, y_pred_best, labels=species_order)
-
-x_pos = np.arange(len(species_order))
-width = 0.25
-
-bars1 = axes[1].bar(x_pos - width, precision, width, label='Precision', 
-                   color='#FFB3D9', edgecolor='#8B4789', linewidth=1.5)
-bars2 = axes[1].bar(x_pos, recall, width, label='Recall', 
-                   color='#E6B3FF', edgecolor='#8B4789', linewidth=1.5)
-bars3 = axes[1].bar(x_pos + width, f1, width, label='F1-score', 
-                   color='#D4A5D4', edgecolor='#8B4789', linewidth=1.5)
-
-axes[1].set_xlabel('Espece', fontsize=11, color='#8B4789')
-axes[1].set_ylabel('Score', fontsize=11, color='#8B4789')
-axes[1].set_title('Metriques par espece', fontsize=12, fontweight='bold', color='#8B4789')
-axes[1].set_xticks(x_pos)
-axes[1].set_xticklabels(species_order)
-axes[1].legend()
-axes[1].set_ylim([0, 1.1])
-axes[1].set_facecolor('#FFF5FA')
-axes[1].grid(axis='y', alpha=0.3, color='#D4A5D4')
-
-plt.tight_layout()
-plt.savefig('etape7_meilleur_modele.png', dpi=300, bbox_inches='tight', facecolor='#FFF5FA')
-plt.show()
-
-print("\nOK - Graphique sauvegarde : etape7_meilleur_modele.png")
-
-# ====================================================================
-# RESUME FINAL DE L'ETAPE 7
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("RESUME DE L'ETAPE 7")
-print("=" * 60)
-print("\n✓ Optimisation des hyper-parametres du KNN realisee")
-print(f"  - Meilleurs parametres KNN : {grid_search_knn.best_params_}")
-print(f"\n✓ Comparaison de 6 modeles differents effectuee")
-print(f"  - Meilleur modele : {best_model_name}")
-print(f"  - Exactitude : {best_model_score*100:.2f}%")
-print(f"\n✓ Tous les graphiques comparatifs ont ete generes")
-print("=" * 60)
-
-# ====================================================================
-# ETAPE 8 : DEPLOIEMENT DU MODELE
-# ====================================================================
-
-print("\n" + "=" * 60)
-print("[ETAPE 8 : Deploiement du modele]")
-print("=" * 60)
-
-# ====================================================================
-# PARTIE 8.1 : SAUVEGARDE DU MODELE ET DU SCALER
-# ====================================================================
-
-print("\n--- Partie 8.1 : Sauvegarde du modele ---")
-
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pickle
-import joblib
+from datetime import datetime
 
-# Sauvegarder le meilleur modele avec pickle
-print("\nSauvegarde du meilleur modele et du scaler...")
+# Configuration de la page
+st.set_page_config(
+    page_title="Iris Classification Platform",
+    page_icon="🔬",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# Methode 1 : Avec pickle
-with open('best_model.pkl', 'wb') as file:
-    pickle.dump(best_model, file)
-print("✓ Modele sauvegarde : best_model.pkl")
+# ====================================================================
+# CHARGEMENT DU MODÈLE LOCAL
+# ====================================================================
 
-# Sauvegarder aussi le scaler (tres important !)
-with open('scaler.pkl', 'wb') as file:
-    pickle.dump(scaler, file)
-print("✓ Scaler sauvegarde : scaler.pkl")
+@st.cache_resource
+def load_model_files():
+    """Charger le modèle et le scaler"""
+    try:
+        with open('best_model.pkl', 'rb') as file:
+            model = pickle.load(file)
+        with open('scaler.pkl', 'rb') as file:
+            scaler = pickle.load(file)
+        with open('model_info.pkl', 'rb') as file:
+            model_info = pickle.load(file)
+        return model, scaler, model_info
+    except Exception as e:
+        return None, None, None
 
-# Methode 2 : Avec joblib (alternative, plus efficace pour les gros modeles)
-joblib.dump(best_model, 'best_model_joblib.pkl')
-joblib.dump(scaler, 'scaler_joblib.pkl')
-print("✓ Version joblib aussi sauvegardee")
+MODEL, SCALER, MODEL_INFO = load_model_files()
 
-# Sauvegarder aussi les informations sur le modele
-model_info = {
-    'model_name': best_model_name,
-    'accuracy': best_model_score,
-    'features': list(X.columns),
-    'species': species_order,
-    'training_date': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
-}
+# ====================================================================
+# STYLE CSS PERSONNALISÉ
+# ====================================================================
 
-with open('model_info.pkl', 'wb') as file:
-    pickle.dump(model_info, file)
-print("✓ Informations du modele sauvegardees : model_info.pkl")
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    :root {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1a2947;
+        --bg-tertiary: #243557;
+        --accent-primary: #06b6d4;
+        --accent-secondary: #0891b2;
+        --accent-light: #22d3ee;
+        --text-primary: #ffffff;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --success: #10b981;
+        --danger: #ef4444;
+        --shadow-sm: 0 2px 8px rgba(6, 182, 212, 0.1);
+        --shadow-md: 0 8px 24px rgba(6, 182, 212, 0.15);
+        --shadow-lg: 0 16px 40px rgba(6, 182, 212, 0.2);
+    }
+    
+    html, body {
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .stApp {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+    
+    /* Main Header */
+    .main-header {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        border-radius: 20px;
+        padding: clamp(1.5rem, 5vw, 3.5rem);
+        margin-bottom: clamp(1.5rem, 4vw, 3rem);
+        box-shadow: var(--shadow-md);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    
+    .main-header > * {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .main-title {
+        font-size: clamp(1.8rem, 8vw, 3.5rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .main-subtitle {
+        color: var(--text-secondary);
+        font-size: clamp(0.85rem, 2vw, 1.1rem);
+        font-weight: 400;
+        max-width: 600px;
+    }
+    
+    /* Cards */
+    .glass-card {
+        background: rgba(26, 41, 71, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(6, 182, 212, 0.1);
+        border-radius: 16px;
+        padding: clamp(1.25rem, 3vw, 2rem);
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .glass-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: rgba(6, 182, 212, 0.4);
+        background: rgba(26, 41, 71, 0.8);
+    }
+    
+    /* Metric Cards */
+    .metric-card {
+        background: rgba(36, 53, 87, 0.4);
+        border: 1px solid rgba(6, 182, 212, 0.15);
+        border-radius: 14px;
+        padding: clamp(1rem, 2.5vw, 1.8rem);
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .metric-card:hover {
+        border-color: rgba(6, 182, 212, 0.4);
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: var(--shadow-lg);
+        background: rgba(36, 53, 87, 0.7);
+    }
+    
+    .metric-label {
+        color: var(--text-muted);
+        font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 0.75rem;
+    }
+    
+    .metric-value {
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        font-weight: 800;
+        margin: 0.5rem 0;
+    }
+    
+    .metric-description {
+        color: var(--text-muted);
+        font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+        margin-top: 0.5rem;
+    }
+    
+    /* Section Headers */
+    .section-header {
+        color: var(--text-primary);
+        font-size: clamp(1.3rem, 4vw, 2rem);
+        font-weight: 700;
+        margin: clamp(1.5rem, 3vw, 2.5rem) 0 clamp(0.75rem, 2vw, 1.5rem) 0;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid;
+        border-image: linear-gradient(90deg, var(--accent-primary), transparent) 1;
+        position: relative;
+    }
+    
+    /* Stat Box */
+    .stat-box {
+        background: rgba(36, 53, 87, 0.4);
+        border: 1px solid rgba(6, 182, 212, 0.15);
+        border-radius: 12px;
+        padding: clamp(0.9rem, 2vw, 1.4rem);
+        transition: all 0.3s ease;
+        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .stat-box:hover {
+        border-color: rgba(6, 182, 212, 0.4);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+        background: rgba(36, 53, 87, 0.6);
+    }
+    
+    .stat-title {
+        color: var(--text-muted);
+        font-size: clamp(0.6rem, 1.3vw, 0.75rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: clamp(1.2rem, 3vw, 2rem);
+        font-weight: 800;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        color: #0f172a;
+        border: none;
+        border-radius: 10px;
+        padding: clamp(0.6rem, 1.5vw, 0.9rem) clamp(1.2rem, 3vw, 1.8rem);
+        font-weight: 700;
+        font-size: clamp(0.85rem, 2vw, 1rem);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--shadow-md);
+        width: 100%;
+        letter-spacing: 0.01em;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+        background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent-primary) 100%);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(-1px);
+    }
+    
+    /* Inputs */
+    .stNumberInput > div > div > input,
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div > select {
+        background: rgba(36, 53, 87, 0.4) !important;
+        border: 1px solid rgba(6, 182, 212, 0.2) !important;
+        border-radius: 10px !important;
+        color: var(--text-primary) !important;
+        padding: clamp(0.6rem, 1.5vw, 0.9rem) !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-size: clamp(0.85rem, 2vw, 1rem) !important;
+    }
+    
+    .stNumberInput > div > div > input:focus,
+    .stTextInput > div > div > input:focus,
+    .stSelectbox > div > div > select:focus {
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25) !important;
+        background: rgba(36, 53, 87, 0.6) !important;
+    }
+    
+    label {
+        color: var(--text-secondary) !important;
+        font-weight: 700 !important;
+        font-size: clamp(0.8rem, 1.8vw, 0.95rem) !important;
+        letter-spacing: 0.01em !important;
+    }
+    
+    /* Status Badge */
+    .status-badge {
+        display: inline-block;
+        padding: clamp(0.4rem, 1vw, 0.6rem) clamp(0.8rem, 2vw, 1.2rem);
+        border-radius: 20px;
+        font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        color: white;
+        box-shadow: var(--shadow-md);
+        letter-spacing: 0.01em;
+    }
+    
+    /* Navigation Buttons Container */
+    .nav-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Footer */
+    .footer {
+        text-align: center;
+        color: var(--text-muted);
+        padding: clamp(1.5rem, 3vw, 2.5rem);
+        margin-top: clamp(2rem, 5vw, 4rem);
+        border-top: 1px solid rgba(6, 182, 212, 0.1);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .main-header {
+            padding: 1.5rem;
+        }
+        
+        .section-header {
+            font-size: 1.4rem;
+            margin: 1.5rem 0 0.8rem 0;
+        }
+        
+        .metric-card, .stat-box {
+            min-height: 120px;
+        }
+        
+        .glass-card {
+            padding: 1.25rem;
+        }
+        
+        .stColumns {
+            gap: 0.75rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .main-title {
+            font-size: 1.8rem;
+        }
+        
+        .main-subtitle {
+            font-size: 0.9rem;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+        }
+        
+        .stButton > button {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .stColumns {
+            gap: 0.5rem !important;
+        }
+    }
+    
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Hide streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
 
-# Tester le chargement
-print("\nTest de chargement du modele...")
-with open('best_model.pkl', 'rb') as file:
-    loaded_model = pickle.load(file)
+# ====================================================================
+# FONCTIONS UTILITAIRES
+# ====================================================================
 
-with open('scaler.pkl', 'rb') as file:
-    loaded_scaler = pickle.load(file)
+@st.cache_data
+def load_iris_data():
+    """Charger le dataset Iris complet"""
+    from sklearn.datasets import load_iris
+    iris = load_iris()
+    df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+    df['species'] = iris.target
+    species_names = {0: 'setosa', 1: 'versicolor', 2: 'virginica'}
+    df['species'] = df['species'].map(species_names)
+    df.columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species']
+    return df
 
-# Faire une prediction de test
-test_prediction = loaded_model.predict(loaded_scaler.transform(X_test[:1]))
-print(f"✓ Modele charge avec succes ! Prediction test : {test_prediction[0]}")
+def create_metric_card(label, value, description=""):
+    return f"""
+    <div class="metric-card">
+        <div class="metric-label">{label}</div>
+        <div class="metric-value">{value}</div>
+        {f'<div class="metric-description">{description}</div>' if description else ''}
+    </div>
+    """
 
-print("\n" + "=" * 60)
-print("FICHIERS CREES :")
-print("  - best_model.pkl (modele principal)")
-print("  - scaler.pkl (normaliseur)")
-print("  - model_info.pkl (informations)")
-print("=" * 60)
+def create_stat_box(title, value):
+    return f"""
+    <div class="stat-box">
+        <div class="stat-title">{title}</div>
+        <div class="stat-value">{value}</div>
+    </div>
+    """
+
+# ====================================================================
+# HEADER PRINCIPAL
+# ====================================================================
+
+st.markdown("""
+    <div class="main-header">
+        <h1 class="main-title">Iris Classification Platform</h1>
+        <p class="main-subtitle">Système de classification avancé des espèces d'iris utilisant le Machine Learning</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ====================================================================
+# NAVIGATION
+# ====================================================================
+
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = "Dashboard"
+
+# Navigation buttons - horizontal inline layout
+st.markdown("""
+    <style>
+    .nav-buttons {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    
+    .nav-buttons button {
+        flex: 1;
+        min-width: 140px;
+        padding: 0.7rem 1.2rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+        transition: all 0.3s ease !important;
+        white-space: nowrap;
+    }
+    
+    @media (max-width: 768px) {
+        .nav-buttons {
+            gap: 0.5rem;
+        }
+        
+        .nav-buttons button {
+            flex: 0 1 calc(50% - 0.25rem) !important;
+            min-width: 100px !important;
+            font-size: 0.8rem !important;
+            padding: 0.6rem 0.9rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .nav-buttons {
+            gap: 0.4rem;
+        }
+        
+        .nav-buttons button {
+            flex: 0 1 calc(50% - 0.2rem) !important;
+            min-width: 85px !important;
+            font-size: 0.75rem !important;
+            padding: 0.5rem 0.7rem !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Create horizontal layout for navigation buttons
+nav_cols = st.columns([1, 1, 1, 1, 1], gap="small")
+
+nav_buttons = [
+    ("Dashboard", "nav_dashboard"),
+    ("Prédiction Simple", "nav_predict"),
+    ("Prédictions Multiples", "nav_batch"),
+    ("Visualisations", "nav_viz"),
+    ("À propos", "nav_about")
+]
+
+for col, (label, key) in zip(nav_cols, nav_buttons):
+    with col:
+        if st.button(label, use_container_width=True, key=key):
+            st.session_state.current_page = label
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ====================================================================
+# PAGE 1: DASHBOARD
+# ====================================================================
+if st.session_state.current_page == "Dashboard":
+    df = load_iris_data()
+    
+    # Section 1: Vue d'ensemble du modèle
+    st.markdown('<div class="section-header">Vue d\'ensemble du modèle</div>', unsafe_allow_html=True)
+    
+    if MODEL_INFO:
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.markdown(create_metric_card("Modèle", MODEL_INFO['model_name'], "Algorithme utilisé"), unsafe_allow_html=True)
+        with col2:
+            st.markdown(create_metric_card("Exactitude", f"{MODEL_INFO['accuracy']*100:.2f}%", "Performance sur test"), unsafe_allow_html=True)
+        with col3:
+            st.markdown(create_metric_card("Features", len(MODEL_INFO['features']), "Variables prédictives"), unsafe_allow_html=True)
+        with col4:
+            st.markdown(create_metric_card("Classes", len(MODEL_INFO['species']), "Espèces identifiables"), unsafe_allow_html=True)
+    
+    # Section 2: Statistiques du dataset
+    st.markdown('<div class="section-header">Analyse statistique du dataset</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([1.5, 1], gap="medium")
+    
+    with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Statistiques descriptives")
+        
+        stats = df.describe().T[['mean', 'std', 'min', 'max']].round(2)
+        stats.columns = ['Moyenne', 'Écart-type', 'Minimum', 'Maximum']
+        
+        # Créer un tableau stylisé
+        fig = go.Figure(data=[go.Table(
+            header=dict(
+                values=['Variable'] + list(stats.columns),
+                fill_color='#1a1a1a',
+                align='left',
+                font=dict(color='white', size=12, family='Inter')
+            ),
+            cells=dict(
+                values=[stats.index] + [stats[col] for col in stats.columns],
+                fill_color='#242424',
+                align='left',
+                font=dict(color='#b3b3b3', size=11, family='Inter')
+            ))
+        ])
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=250,
+            margin=dict(l=0, r=0, t=0, b=0)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Répartition des espèces")
+        
+        species_counts = df['species'].value_counts()
+        
+        fig = go.Figure(data=[go.Pie(
+            labels=species_counts.index,
+            values=species_counts.values,
+            hole=0.6,
+            marker=dict(colors=['#06b6d4', '#8b5cf6', '#10b981']),
+            textfont=dict(color='#0f172a', size=14, family='Poppins', weight='bold')
+        )])
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            showlegend=True,
+            legend=dict(
+                font=dict(color='#cbd5e1', family='Poppins', size=11),
+                bgcolor='rgba(26, 41, 71, 0.8)',
+                bordercolor='rgba(6, 182, 212, 0.2)',
+                borderwidth=1
+            ),
+            height=250,
+            margin=dict(l=20, r=20, t=20, b=20)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Section 3: Corrélations
+    st.markdown('<div class="section-header">Matrice de corrélation</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        
+        corr_matrix = df[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].corr()
+        
+        fig = go.Figure(data=go.Heatmap(
+            z=corr_matrix.values,
+            x=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width'],
+            y=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width'],
+            colorscale=[[0, '#1a1a1a'], [0.5, '#ff6b9d'], [1, '#ff8fb3']],
+            text=corr_matrix.values.round(2),
+            texttemplate='%{text}',
+            textfont={"size": 12, "color": "white"},
+            colorbar=dict(
+                tickfont=dict(color='white'),
+                title=dict(text="Corrélation", font=dict(color='white'))
+            )
+        ))
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white', family='Inter'),
+            height=400,
+            margin=dict(l=0, r=0, t=0, b=0)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Corrélations fortes")
+        
+        strong_corr = []
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i+1, len(corr_matrix.columns)):
+                if abs(corr_matrix.iloc[i, j]) > 0.8:
+                    strong_corr.append({
+                        'Var 1': corr_matrix.columns[i].replace('_', ' ').title(),
+                        'Var 2': corr_matrix.columns[j].replace('_', ' ').title(),
+                        'Corrélation': f"{corr_matrix.iloc[i, j]:.3f}"
+                    })
+        
+        if strong_corr:
+            for corr in strong_corr:
+                st.markdown(f"""
+                <div style="background: rgba(36, 53, 87, 0.4); padding: 1rem; border-radius: 10px; margin-bottom: 0.5rem; border-left: 3px solid #06b6d4; border: 1px solid rgba(6, 182, 212, 0.2);">
+                    <div style="color: #cbd5e1; font-size: 0.85rem; font-family: Poppins;">{corr['Var 1']} ↔ {corr['Var 2']}</div>
+                    <div style="color: #22d3ee; font-size: 1.25rem; font-weight: 700; margin-top: 0.25rem; font-family: Poppins;">{corr['Corrélation']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Section 4: Distribution des variables
+    st.markdown('<div class="section-header">Distribution des caractéristiques</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    variables = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+    titles = ['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']
+    
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=titles,
+        vertical_spacing=0.15,
+        horizontal_spacing=0.1
+    )
+    
+    colors = {'setosa': '#06b6d4', 'versicolor': '#8b5cf6', 'virginica': '#10b981'}
+    
+    for idx, (var, title) in enumerate(zip(variables, titles)):
+        row = idx // 2 + 1
+        col = idx % 2 + 1
+        
+        for species in df['species'].unique():
+            species_data = df[df['species'] == species][var]
+            
+            fig.add_trace(
+                go.Violin(
+                    y=species_data,
+                    name=species,
+                    marker_color=colors[species],
+                    showlegend=(idx == 0),
+                    box_visible=True,
+                    meanline_visible=True
+                ),
+                row=row, col=col
+            )
+
+
+    
+    fig.update_layout(
+        height=600,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#cbd5e1', family='Poppins'),
+        showlegend=True,
+        legend=dict(
+            bgcolor='rgba(26, 41, 71, 0.8)',
+            bordercolor='rgba(6, 182, 212, 0.2)',
+            borderwidth=1,
+            font=dict(family='Poppins', size=11)
+        ),
+        margin=dict(l=40, r=40, t=60, b=40)
+    )
+    
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)', zeroline=False)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Section 5: Métriques rapides
+    st.markdown('<div class="section-header">Métriques du dataset</div>', unsafe_allow_html=True)
+    
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    
+    metrics = [
+        ("Total Échantillons", f"{len(df)}"),
+        ("Variables", f"{len(df.columns)-1}"),
+        ("Espèces", f"{df['species'].nunique()}"),
+        ("Valeurs Manquantes", f"{df.isnull().sum().sum()}"),
+        ("Moyenne Sepal", f"{df['sepal_length'].mean():.2f}"),
+        ("Moyenne Petal", f"{df['petal_length'].mean():.2f}")
+    ]
+    
+    for col, (label, value) in zip([col1, col2, col3, col4, col5, col6], metrics):
+        with col:
+            st.markdown(create_stat_box(label, value), unsafe_allow_html=True)
+
+            
+# ====================================================================
+# PAGE 2: PRÉDICTION SIMPLE
+# ====================================================================
+
+elif st.session_state.current_page == "Prédiction Simple":
+    st.markdown('<div class="section-header">Prédiction d\'espèce</div>', unsafe_allow_html=True)
+    
+    if MODEL is None or SCALER is None:
+        st.error("❌ Modèle non disponible")
+    else:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("Entrez les mesures de la fleur en centimètres")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            sepal_length = st.number_input("Longueur du Sépale (cm)", 0.0, 10.0, 5.1, 0.1)
+            petal_length = st.number_input("Longueur du Pétale (cm)", 0.0, 10.0, 1.4, 0.1)
+        with col2:
+            sepal_width = st.number_input("Largeur du Sépale (cm)", 0.0, 10.0, 3.5, 0.1)
+            petal_width = st.number_input("Largeur du Pétale (cm)", 0.0, 10.0, 0.2, 0.1)
+        
+        if st.button("Lancer la prédiction", use_container_width=True):
+            try:
+                features = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+                features_scaled = SCALER.transform(features)
+                prediction = MODEL.predict(features_scaled)[0]
+                
+                probabilities = []
+                if hasattr(MODEL, 'predict_proba'):
+                    proba = MODEL.predict_proba(features_scaled)[0]
+                    probabilities = [{'species': species, 'probability': f'{prob*100:.2f}'} for species, prob in zip(MODEL_INFO['species'], proba)]
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="glass-card" style="text-align: center; padding: 3rem;">
+                    <div style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; font-family: Poppins; letter-spacing: 0.1em; font-weight: 700;">Espèce prédite</div>
+                    <div style="font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 1rem 0; font-family: Poppins;">{prediction.upper()}</div>
+                    <div class="status-badge">Confiance élevée</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if probabilities:
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("#### Probabilités par espèce")
+                    st.dataframe(pd.DataFrame(probabilities), use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Erreur: {str(e)}")
+        else:
+            st.markdown('</div>', unsafe_allow_html=True)
+
+# ====================================================================
+# PAGE 3: PRÉDICTIONS MULTIPLES
+# ====================================================================
+
+elif st.session_state.current_page == "Prédictions Multiples":
+    st.markdown('<div class="section-header">Prédictions par lot</div>', unsafe_allow_html=True)
+    
+    if MODEL is None or SCALER is None:
+        st.error("❌ Modèle non disponible")
+    else:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        
+        with st.expander("📋 Format du fichier CSV requis"):
+            example_df = pd.DataFrame({'sepal_length': [5.1, 6.2, 5.9], 'sepal_width': [3.5, 2.8, 3.0], 'petal_length': [1.4, 4.8, 5.1], 'petal_width': [0.2, 1.8, 1.8]})
+            st.dataframe(example_df, use_container_width=True)
+            st.download_button(label="📥 Télécharger l'exemple", data=example_df.to_csv(index=False), file_name="exemple_iris.csv", mime="text/csv", use_container_width=True)
+        
+        uploaded_file = st.file_uploader("Sélectionner un fichier CSV", type=['csv', 'txt'])
+        
+        if uploaded_file is not None:
+            try:
+                content = uploaded_file.read().decode('utf-8')
+                uploaded_file.seek(0)
+                separator = '\t' if '\t' in content.split('\n')[0] else (';' if ';' in content.split('\n')[0] else ',')
+                df = pd.read_csv(uploaded_file, sep=separator)
+                
+                column_mapping = {
+                    'SepalLength': 'sepal_length', 'SepalWidth': 'sepal_width', 'PetalLength': 'petal_length', 'PetalWidth': 'petal_width',
+                    'Sepal.Length': 'sepal_length', 'Sepal.Width': 'sepal_width', 'Petal.Length': 'petal_length', 'Petal.Width': 'petal_width'
+                }
+                df = df.rename(columns=column_mapping)
+                if 'Species' in df.columns:
+                    df = df.drop('Species', axis=1)
+                
+                required_cols = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+                missing_cols = [col for col in required_cols if col not in df.columns]
+                
+                if missing_cols:
+                    st.error(f"❌ Colonnes manquantes")
+                else:
+                    df = df[required_cols]
+                    st.success(f"✅ Fichier chargé : {len(df)} échantillons")
+                    st.dataframe(df.head(10), use_container_width=True)
+                    
+                    if st.button("🚀 Lancer les prédictions", use_container_width=True):
+                        try:
+                            df_clean = df.copy()
+                            for col in required_cols:
+                                df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
+                            df_clean = df_clean.dropna()
+                            
+                            if len(df_clean) == 0:
+                                st.error("❌ Aucune donnée valide")
+                            else:
+                                features_scaled = SCALER.transform(df_clean.values)
+                                predictions = MODEL.predict(features_scaled)
+                                results_df = df_clean.copy()
+                                results_df['prediction'] = predictions
+                                
+                                st.markdown('</div>', unsafe_allow_html=True)
+                                
+                                col1, col2, col3, col4 = st.columns(4)
+                                pred_counts = pd.Series(predictions).value_counts()
+                                with col1:
+                                    st.markdown(create_metric_card("Total", f"{len(results_df)}", "Prédictions"), unsafe_allow_html=True)
+                                with col2:
+                                    st.markdown(create_metric_card("Setosa", f"{pred_counts.get('setosa', 0)}", "Échantillons"), unsafe_allow_html=True)
+                                with col3:
+                                    st.markdown(create_metric_card("Versicolor", f"{pred_counts.get('versicolor', 0)}", "Échantillons"), unsafe_allow_html=True)
+                                with col4:
+                                    st.markdown(create_metric_card("Virginica", f"{pred_counts.get('virginica', 0)}", "Échantillons"), unsafe_allow_html=True)
+                                
+                                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                                st.markdown("#### Répartition des prédictions")
+                                fig = go.Figure(data=[go.Bar(x=pred_counts.index, y=pred_counts.values, marker=dict(color=['#06b6d4', '#8b5cf6', '#10b981']), text=pred_counts.values, textposition='auto', textfont=dict(color='#0f172a', size=14, family='Poppins'))])
+                                fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#cbd5e1', family='Poppins'), height=350, xaxis=dict(showgrid=False, title="Espèce"), yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)', title="Nombre"), margin=dict(l=40, r=40, t=40, b=40))
+                                st.plotly_chart(fig, use_container_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                                
+                                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                                st.markdown("#### Résultats détaillés")
+                                st.dataframe(results_df, use_container_width=True)
+                                csv = results_df.to_csv(index=False)
+                                st.download_button(label="📥 Télécharger les résultats", data=csv, file_name=f"predictions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", mime="text/csv", use_container_width=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                        except Exception as e:
+                            st.error(f"❌ Erreur: {str(e)}")
+            except Exception as e:
+                st.error(f"❌ Erreur de lecture")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+# ====================================================================
+# PAGE 4: VISUALISATIONS
+# ====================================================================
+elif st.session_state.current_page == "Visualisations":
+    
+    st.markdown('<div class="section-header">Exploration visuelle des données</div>', unsafe_allow_html=True)
+    
+    df = load_iris_data()
+    
+    viz_type = st.selectbox(
+        "Type de visualisation",
+        ["Scatter Plot 2D", "Scatter Plot 3D", "Box Plot", "Distribution", "Pairplot"]
+    )
+    
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    colors_map = {'setosa': '#06b6d4', 'versicolor': '#8b5cf6', 'virginica': '#10b981'}
+    
+    if viz_type == "Scatter Plot 2D":
+        col1, col2 = st.columns(2)
+        with col1:
+            x_var = st.selectbox("Axe X", df.columns[:-1], index=2)
+        with col2:
+            y_var = st.selectbox("Axe Y", df.columns[:-1], index=3)
+        
+        fig = px.scatter(
+            df, x=x_var, y=y_var, color='species',
+            color_discrete_map=colors_map,
+            title=f"{x_var.replace('_', ' ').title()} vs {y_var.replace('_', ' ').title()}"
+        )
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#cbd5e1', family='Poppins'),
+            height=500,
+            xaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Scatter Plot 3D":
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            x_var = st.selectbox("Axe X", df.columns[:-1], index=0)
+        with col2:
+            y_var = st.selectbox("Axe Y", df.columns[:-1], index=1)
+        with col3:
+            z_var = st.selectbox("Axe Z", df.columns[:-1], index=2)
+        
+        fig = px.scatter_3d(
+            df, x=x_var, y=y_var, z=z_var, color='species',
+            color_discrete_map=colors_map
+        )
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#cbd5e1', family='Poppins'),
+            height=600,
+            scene=dict(
+                xaxis=dict(backgroundcolor='#0f172a', gridcolor='rgba(6, 182, 212, 0.1)'),
+                yaxis=dict(backgroundcolor='#0f172a', gridcolor='rgba(6, 182, 212, 0.1)'),
+                zaxis=dict(backgroundcolor='#0f172a', gridcolor='rgba(6, 182, 212, 0.1)')
+            ),
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Box Plot":
+        var = st.selectbox("Variable à visualiser", df.columns[:-1])
+        
+        fig = go.Figure()
+        for species in df['species'].unique():
+            fig.add_trace(go.Box(
+                y=df[df['species'] == species][var],
+                name=species,
+                marker_color=colors_map[species]
+            ))
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#cbd5e1', family='Poppins'),
+            height=500,
+            title=f"Distribution de {var.replace('_', ' ').title()}",
+            yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            xaxis=dict(showgrid=False),
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Distribution":
+        var = st.selectbox("Variable à visualiser", df.columns[:-1])
+        
+        fig = go.Figure()
+        for species in df['species'].unique():
+            fig.add_trace(go.Histogram(
+                x=df[df['species'] == species][var],
+                name=species,
+                marker_color=colors_map[species],
+                opacity=0.7
+            ))
+        
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#cbd5e1', family='Poppins'),
+            height=500,
+            title=f"Distribution de {var.replace('_', ' ').title()}",
+            barmode='overlay',
+            xaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            yaxis=dict(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)'),
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=11))
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    elif viz_type == "Pairplot":
+        st.info("Matrice de nuages de points de toutes les variables")
+        
+        vars_list = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+        fig = make_subplots(
+            rows=4, cols=4,
+            subplot_titles=[f"{v1.split('_')[0][0].upper()}{v1.split('_')[0][1]} vs {v2.split('_')[0][0].upper()}{v2.split('_')[0][1]}" 
+                          for v1 in vars_list for v2 in vars_list],
+            vertical_spacing=0.05,
+            horizontal_spacing=0.05
+        )
+        
+        for i, var1 in enumerate(vars_list):
+            for j, var2 in enumerate(vars_list):
+                for species in df['species'].unique():
+                    species_df = df[df['species'] == species]
+                    
+                    fig.add_trace(
+                        go.Scatter(
+                            x=species_df[var2],
+                            y=species_df[var1],
+                            mode='markers',
+                            name=species,
+                            marker=dict(color=colors_map[species], size=4),
+                            showlegend=(i==0 and j==0)
+                        ),
+                        row=i+1, col=j+1
+                    )
+        
+        fig.update_layout(
+            height=1000,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#cbd5e1', family='Poppins', size=8),
+            showlegend=True,
+            legend=dict(bgcolor='rgba(26, 41, 71, 0.8)', bordercolor='rgba(6, 182, 212, 0.2)', borderwidth=1, font=dict(family='Poppins', size=10))
+        )
+        
+        fig.update_xaxes(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)')
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(6, 182, 212, 0.1)')
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ====================================================================
+# PAGE 5: À PROPOS
+# ====================================================================
+
+elif st.session_state.current_page == "À propos":
+    
+    st.markdown('<div class="section-header">À propos du projet</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("""
+        #### Projet Académique
+        
+        Ce système de classification fait partie du **TP N°1: Classification des fleurs iris** dans le cadre du module 
+        **Introduction à l'Intelligence Artificielle et Machine Learning (INFO4111)**.
+        
+        #### Institution
+        
+        **Université de Yaoundé 1**  
+        École Normale Supérieure  
+        Département d'Informatique et des Technologies Éducatives
+        
+        #### Objectifs pédagogiques
+        
+        - Maîtrise de Python pour la data science
+        - Utilisation des bibliothèques ML (scikit-learn, pandas, numpy)
+        - Exploration et visualisation de données
+        - Préparation et normalisation des données
+        - Entraînement et évaluation de modèles
+        - Déploiement d'applications ML avec Flask et Streamlit
+        
+        #### Dataset Iris
+        
+        Le dataset Iris, collecté par Edgar Anderson et popularisé par Ronald Fisher en 1936, est l'un des ensembles 
+        de données les plus célèbres en apprentissage automatique. Il contient 150 échantillons de fleurs iris répartis 
+        en 3 espèces, avec 4 caractéristiques morphologiques mesurées pour chaque échantillon.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Technologies")
+        
+        technologies = [
+            ("Python", "Langage principal"),
+            ("scikit-learn", "Machine Learning"),
+            ("Pandas", "Manipulation de données"),
+            ("NumPy", "Calcul numérique"),
+            ("Plotly", "Visualisations"),
+            ("Flask", "API REST"),
+            ("Streamlit", "Interface web")
+        ]
+        
+        for tech, desc in technologies:
+            st.markdown(f"""
+            <div style="background: rgba(36, 53, 87, 0.4); padding: 0.75rem; border-radius: 10px; margin-bottom: 0.5rem; border-left: 3px solid #06b6d4; border: 1px solid rgba(6, 182, 212, 0.2);">
+                <div style="color: #22d3ee; font-weight: 700; font-family: Poppins;">{tech}</div>
+                <div style="color: #cbd5e1; font-size: 0.85rem; font-family: Poppins; margin-top: 0.3rem;">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Informations du modèle
+    if MODEL_INFO:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### Informations du modèle déployé")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(create_stat_box("Algorithme", MODEL_INFO['model_name']), unsafe_allow_html=True)
+        with col2:
+            st.markdown(create_stat_box("Précision", f"{MODEL_INFO['accuracy']*100:.2f}%"), unsafe_allow_html=True)
+        with col3:
+            st.markdown(create_stat_box("Date", MODEL_INFO['training_date'].split()[0]), unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Credits
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("""
+    #### Crédits
+    
+    **Enseignant**: Stéphane C.K. TEKOUAB (PhD & Ing.)  
+    **Année académique**: 2025-2026
+    
+    www.tekouabou.com
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
